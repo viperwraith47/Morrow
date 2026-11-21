@@ -15,6 +15,13 @@
 
 Morrow is built with **Swift** and **SwiftUI**. It has no account or API-key setup, and keeps your library on your Mac. Discovery and wallpaper changes are manual—Morrow does not rotate wallpapers on a schedule.
 
+<p align="center">
+  <a href="https://github.com/viperwraith47/Morrow/releases/latest/download/Morrow.dmg">⬇️ Download latest Morrow.dmg</a>
+  · <a href="https://github.com/viperwraith47/Morrow/releases">View all releases</a>
+</p>
+
+<p align="center"><sub>Attach the build output as a GitHub release asset named <code>Morrow.dmg</code>. Release downloads follow repository visibility.</sub></p>
+
 ---
 
 ## ✨ Features

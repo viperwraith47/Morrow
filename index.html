@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f2eb">
+  <meta name="description" content="Morrow is a native macOS wallpaper browser for discovering CC0 images from Wikimedia Commons, organizing favorites, saving originals offline, and setting your desktop by hand.">
+  <meta property="og:title" content="Morrow — Find a view that feels like yours">
+  <meta property="og:description" content="Discover, collect, keep offline, and apply wallpapers with a thoughtful native Mac app.">
+  <meta property="og:type" content="website">
+  <title>Morrow — A thoughtful wallpaper browser for Mac</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f4f2eb;
+      --paper-deep: #ebe8de;
+      --ink: #202b2a;
+      --muted: #67716a;
+      --forest: #29483e;
+      --forest-dark: #203b34;
+      --sage: #dce5d9;
+      --sage-light: #edf1e9;
+      --line: rgba(35, 57, 49, .13);
+      --white: #fffefa;
+      --sun: #edc983;
+      --radius-lg: 30px;
+      --radius-md: 22px;
+      --shadow: 0 24px 70px rgba(32, 49, 42, .14);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--paper);
+      color: var(--ink);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    a { color: inherit; }
+    a:focus-visible, button:focus-visible {
+      outline: 3px solid #a55e43;
+      outline-offset: 4px;
+    }
+    img { display: block; max-width: 100%; }
+    .shell { width: min(1160px, calc(100% - 48px)); margin-inline: auto; }
+
+    .site-header {
+      min-height: 82px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      border-bottom: 1px solid var(--line);
+    }
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      color: var(--ink);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 25px;
+      font-weight: 700;
+      letter-spacing: -.04em;
+      text-decoration: none;
+    }
+    .brand img { width: 38px; height: 38px; border-radius: 12px; }
+    .nav-links { display: flex; align-items: center; gap: 30px; }
+    .nav-links a {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 650;
+      text-decoration: none;
+      transition: color .18s ease;
+    }
+    .nav-links a:hover { color: var(--forest); }
+    .nav-links .nav-cta {
+      padding: 10px 16px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--forest);
+    }
+
+    .hero {
+      min-height: 690px;
+      display: grid;
+      grid-template-columns: minmax(0, .92fr) minmax(440px, 1.08fr);
+      align-items: center;
+      gap: 48px;
+      padding-block: 76px 84px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 22px;
+      color: var(--forest);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+    .eyebrow::before { width: 22px; height: 1px; background: currentColor; content: ""; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1, h2, .serif {
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: 500;
+      letter-spacing: -.045em;
+    }
+    h1 {
+      max-width: 610px;
+      margin-bottom: 22px;
+      font-size: clamp(54px, 6.3vw, 84px);
+      line-height: .99;
+    }
+    h1 em { color: var(--forest); font-weight: 400; }
+    .hero-copy {
+      max-width: 490px;
+      margin-bottom: 30px;
+      color: #59645e;
+      font-size: 17px;
+      line-height: 1.8;
+    }
+    .button-row { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+    .button {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 0 20px;
+      border: 1px solid transparent;
+      border-radius: 999px;
+      background: var(--forest);
+      color: white;
+      font-size: 13px;
+      font-weight: 700;
+      text-decoration: none;
+      transition: transform .18s ease, background .18s ease;
+    }
+    .button:hover { transform: translateY(-2px); background: var(--forest-dark); }
+    .button.secondary { border-color: var(--line); background: transparent; color: var(--forest); }
+    .button.secondary:hover { background: var(--sage-light); }
+    .hero-note { margin: 18px 0 0; color: #778078; font-size: 12px; }
+
+    .hero-visual { position: relative; min-height: 500px; display: grid; place-items: center; }
+    .visual-orbit {
+      position: absolute;
+      width: min(100%, 540px);
+      aspect-ratio: 1;
+      border: 1px solid rgba(55, 83, 68, .12);
+      border-radius: 50%;
+    }
+    .visual-orbit::before, .visual-orbit::after {
+      position: absolute;
+      border: 1px solid rgba(55, 83, 68, .09);
+      border-radius: 50%;
+      content: "";
+      inset: 8%;
+    }
+    .visual-orbit::after { inset: 17%; }
+    .app-window {
+      position: relative;
+      z-index: 1;
+      width: min(100%, 492px);
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, .8);
+      border-radius: 23px;
+      background: rgba(255, 254, 250, .93);
+      box-shadow: var(--shadow);
+      transform: rotate(-2deg);
+    }
+    .window-bar {
+      height: 47px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 15px;
+      border-bottom: 1px solid #e9e8e1;
+      color: #7b847b;
+      font-size: 10px;
+      font-weight: 650;
+    }
+    .window-dots { display: flex; gap: 5px; }
+    .window-dots i { width: 7px; height: 7px; border-radius: 50%; background: #d5d4cc; }
+    .window-body { display: grid; grid-template-columns: 112px 1fr; min-height: 300px; }
+    .mock-sidebar { padding: 19px 12px; border-right: 1px solid #eeede7; }
+    .mock-brand { display: flex; align-items: center; gap: 7px; margin-bottom: 24px; font: 700 12px Georgia, serif; }
+    .mock-brand img { width: 20px; height: 20px; border-radius: 6px; }
+    .mock-label { margin: 17px 0 7px; color: #9a9c92; font-size: 8px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    .mock-item { display: flex; align-items: center; gap: 7px; margin: 7px 0; color: #777f76; font-size: 9px; }
+    .mock-item.active { color: var(--forest); font-weight: 750; }
+    .mock-icon { width: 13px; height: 13px; display: inline-grid; place-items: center; border-radius: 4px; background: #e8eee5; color: var(--forest); font-size: 8px; }
+    .mock-grid-wrap { padding: 18px 15px 15px; }
+    .mock-title { margin: 0 0 12px; font: 500 19px Georgia, serif; }
+    .mock-search { height: 25px; margin-bottom: 13px; padding: 5px 9px; border: 1px solid #e5e6de; border-radius: 7px; color: #a2a69b; font-size: 8px; }
+    .mock-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 9px; }
+    .mock-photo { position: relative; min-height: 93px; overflow: hidden; border-radius: 8px; }
+    .mock-photo::after { position: absolute; width: 90px; height: 42px; right: -12px; bottom: -17px; border-radius: 50% 50% 0 0; background: rgba(35, 65, 55, .64); content: ""; transform: rotate(-9deg); }
+    .photo-one { background: radial-gradient(circle at 68% 31%, #fff0bd 0 11%, transparent 11.5%), linear-gradient(170deg, #bfd5d0 0 48%, #d7a784 48% 61%, #647d68 61%); }
+    .photo-two { background: radial-gradient(circle at 32% 31%, #f3cc87 0 10%, transparent 10.5%), linear-gradient(160deg, #9dafad 0 48%, #737c73 48% 65%, #364d49 65%); }
+    .photo-three { background: radial-gradient(ellipse at 70% 72%, #d8b38a 0 20%, transparent 20.5%), linear-gradient(145deg, #d8dfd2, #9cb1a5 58%, #5d756d); }
+    .photo-four { background: radial-gradient(circle at 50% 42%, #ebcf9b 0 12%, transparent 12.5%), linear-gradient(170deg, #b2c3c5 0 52%, #809384 52% 73%, #455b50 73%); }
+    .mock-caption { margin-top: 5px; color: #5f6a62; font-size: 8px; font-weight: 650; }
+    .offline-chip {
+      position: absolute;
+      right: -15px;
+      bottom: 48px;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      border: 1px solid rgba(255, 255, 255, .8);
+      border-radius: 14px;
+      background: var(--white);
+      box-shadow: 0 16px 38px rgba(32, 49, 42, .13);
+      color: var(--forest);
+      font-size: 11px;
+      font-weight: 700;
+      transform: rotate(2deg);
+    }
+    .offline-chip span:first-child { width: 29px; height: 29px; display: grid; place-items: center; border-radius: 9px; background: var(--sage-light); font-size: 15px; }
+    .offline-chip small { display: block; color: var(--muted); font-size: 9px; font-weight: 500; }
+
+    .trust-strip { border-block: 1px solid var(--line); background: rgba(255, 254, 250, .42); }
+    .trust-items { min-height: 86px; display: flex; align-items: center; justify-content: space-between; gap: 22px; }
+    .trust-item { display: flex; align-items: center; gap: 10px; color: #59645e; font-size: 12px; font-weight: 650; }
+    .trust-item b { color: var(--forest); font-size: 17px; }
+
+    .section { padding-block: 112px; }
+    .section-heading { max-width: 610px; margin-bottom: 45px; }
+    .section-heading .eyebrow { margin-bottom: 15px; }
+    h2 { margin-bottom: 15px; font-size: clamp(38px, 4.4vw, 58px); line-height: 1.08; }
+    .section-heading p { margin-bottom: 0; color: var(--muted); font-size: 16px; line-height: 1.8; }
+    .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .feature-card {
+      min-height: 255px;
+      padding: 27px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 254, 250, .72);
+    }
+    .feature-card .feature-symbol { width: 42px; height: 42px; display: grid; place-items: center; margin-bottom: 31px; border-radius: 13px; background: var(--sage-light); color: var(--forest); font-size: 19px; }
+    .feature-card h3 { margin-bottom: 9px; font: 500 22px Georgia, "Times New Roman", serif; letter-spacing: -.02em; }
+    .feature-card p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.75; }
+
+    .workflow-section { padding-block: 0 112px; }
+    .workflow-panel {
+      position: relative;
+      overflow: hidden;
+      padding: 68px;
+      border-radius: var(--radius-lg);
+      background: var(--forest-dark);
+      color: #f5f3eb;
+    }
+    .workflow-panel::after {
+      position: absolute;
+      width: 390px;
+      height: 390px;
+      top: -220px;
+      right: -75px;
+      border: 1px solid rgba(244, 242, 235, .15);
+      border-radius: 50%;
+      box-shadow: 0 0 0 38px rgba(244, 242, 235, .025), 0 0 0 78px rgba(244, 242, 235, .02);
+      content: "";
+    }
+    .workflow-panel .eyebrow { color: #c8d7c7; }
+    .workflow-panel h2 { max-width: 560px; }
+    .workflow-panel > p { max-width: 620px; margin-bottom: 39px; color: #cad4cb; font-size: 14px; line-height: 1.85; }
+    .steps { position: relative; z-index: 1; display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; }
+    .step { padding-top: 17px; border-top: 1px solid rgba(255, 255, 255, .24); }
+    .step-num { display: block; margin-bottom: 20px; color: #e5bf7b; font: 500 15px Georgia, serif; }
+    .step h3 { margin-bottom: 7px; font: 500 17px Georgia, serif; }
+    .step p { margin: 0; color: #c3d0c5; font-size: 11px; line-height: 1.7; }
+
+    .local-section { display: grid; grid-template-columns: .9fr 1.1fr; align-items: center; gap: 72px; }
+    .local-illustration { min-height: 355px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: var(--radius-lg); background: linear-gradient(145deg, #e6eadf, #f9f6ed 72%); }
+    .folder-stack { position: relative; width: 225px; height: 210px; }
+    .folder { position: absolute; inset: 28px 11px 0; border-radius: 21px; background: #b5c7ae; box-shadow: 0 20px 40px rgba(44, 75, 61, .14); transform: rotate(-7deg); }
+    .folder::before { position: absolute; width: 91px; height: 20px; top: -13px; left: 20px; border-radius: 10px 10px 0 0; background: #b5c7ae; content: ""; }
+    .folder.back { background: #d0b889; transform: rotate(7deg); }
+    .folder.back::before { background: #d0b889; }
+    .folder.front { inset: 52px 0 0; display: grid; place-items: center; background: #37594b; transform: rotate(-1deg); }
+    .folder.front::before { background: #37594b; }
+    .folder-image { width: 100px; height: 128px; overflow: hidden; border: 4px solid rgba(255, 255, 255, .72); border-radius: 9px; background: radial-gradient(circle at 65% 30%, #ffdf9a 0 13%, transparent 13.5%), linear-gradient(165deg, #b5d0ca 0 51%, #d19972 51% 62%, #324c43 62%); box-shadow: 0 9px 20px rgba(0, 0, 0, .17); transform: rotate(5deg); }
+    .local-copy h2 { max-width: 520px; }
+    .local-copy > p { color: var(--muted); font-size: 15px; line-height: 1.85; }
+    .storage-list { display: grid; gap: 12px; margin-top: 25px; }
+    .storage-row { display: flex; align-items: flex-start; gap: 12px; color: #526057; font-size: 13px; line-height: 1.6; }
+    .storage-row b { color: var(--forest); }
+    .storage-check { flex: 0 0 23px; width: 23px; height: 23px; display: grid; place-items: center; border-radius: 50%; background: #e0e9dc; color: var(--forest); font-size: 12px; }
+
+    .license-section { padding-top: 0; }
+    .license-card { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; padding: 36px; border: 1px solid var(--line); border-radius: var(--radius-md); background: #e9e8de; }
+    .license-card h3 { margin-bottom: 9px; font: 500 21px Georgia, serif; }
+    .license-card p { margin-bottom: 0; color: #5d685f; font-size: 12px; line-height: 1.8; }
+    .license-card a { color: var(--forest); font-weight: 700; text-underline-offset: 3px; }
+
+    .build-section { padding-top: 15px; }
+    .build-card { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 30px; padding: 44px; border-radius: var(--radius-md); background: #e2e8de; }
+    .build-card h2 { margin-bottom: 10px; font-size: clamp(32px, 4vw, 47px); }
+    .build-card p { max-width: 580px; margin-bottom: 0; color: #5f6a61; font-size: 13px; line-height: 1.75; }
+    .code-pill { display: inline-block; margin-top: 17px; padding: 10px 14px; border-radius: 9px; background: #263c34; color: #f3f1e9; font: 12px ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .build-meta { min-width: 165px; padding-left: 25px; border-left: 1px solid rgba(35, 57, 49, .18); color: #5f6a61; font-size: 11px; line-height: 1.8; }
+    .build-meta strong { display: block; color: var(--forest); font-size: 13px; }
+
+    .site-footer { padding-block: 27px; border-top: 1px solid var(--line); }
+    .footer-inner { display: flex; align-items: center; justify-content: space-between; gap: 16px; color: #727b72; font-size: 11px; }
+    .footer-inner a { color: var(--forest); text-decoration: none; }
+    .footer-inner a:hover { text-decoration: underline; }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; gap: 15px; padding-top: 64px; }
+      .hero-copy { max-width: 620px; }
+      .hero-visual { min-height: 440px; }
+      .local-section { gap: 38px; }
+      .workflow-panel { padding: 48px; }
+    }
+    @media (max-width: 680px) {
+      .shell { width: min(100% - 34px, 520px); }
+      .site-header { min-height: 70px; }
+      .brand { font-size: 22px; }
+      .nav-links { gap: 14px; }
+      .nav-links a { font-size: 11px; }
+      .nav-links a:nth-child(1) { display: none; }
+      .nav-links .nav-cta { padding: 8px 11px; }
+      .hero { min-height: auto; padding-block: 58px 47px; }
+      h1 { font-size: clamp(49px, 14vw, 69px); }
+      .hero-copy { font-size: 15px; }
+      .hero-visual { min-height: 355px; margin-inline: -5px; }
+      .visual-orbit { width: 100%; }
+      .app-window { width: min(100%, 430px); }
+      .window-body { grid-template-columns: 90px 1fr; min-height: 260px; }
+      .mock-sidebar { padding: 14px 8px; }
+      .mock-grid-wrap { padding: 15px 10px; }
+      .mock-photo { min-height: 76px; }
+      .offline-chip { right: -4px; bottom: 24px; }
+      .trust-items { min-height: 74px; flex-wrap: wrap; justify-content: center; gap: 7px 18px; padding-block: 13px; }
+      .trust-item { font-size: 10px; }
+      .trust-item b { font-size: 14px; }
+      .section { padding-block: 75px; }
+      .section-heading { margin-bottom: 29px; }
+      h2 { font-size: 42px; }
+      .feature-grid { grid-template-columns: 1fr; gap: 11px; }
+      .feature-card { min-height: 0; padding: 22px; }
+      .feature-card .feature-symbol { margin-bottom: 19px; }
+      .workflow-section { padding-bottom: 75px; }
+      .workflow-panel { padding: 32px 24px; border-radius: 22px; }
+      .steps { grid-template-columns: repeat(2, 1fr); row-gap: 25px; }
+      .step-num { margin-bottom: 11px; }
+      .local-section { grid-template-columns: 1fr; gap: 31px; }
+      .local-illustration { min-height: 285px; }
+      .license-section { padding-top: 0; }
+      .license-card { grid-template-columns: 1fr; gap: 23px; padding: 25px; }
+      .build-section { padding-top: 0; }
+      .build-card { grid-template-columns: 1fr; gap: 22px; padding: 28px 24px; }
+      .build-meta { padding: 17px 0 0; border-top: 1px solid rgba(35, 57, 49, .18); border-left: 0; }
+      .footer-inner { align-items: flex-start; flex-direction: column; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="shell site-header">
+    <a class="brand" href="#top" aria-label="Morrow home">
+      <img src="Morrow/Assets.xcassets/AppIcon.appiconset/icon_128x128.png" alt="">
+      <span>Morrow</span>
+    </a>
+    <nav class="nav-links" aria-label="Main navigation">
+      <a href="#features">Features</a>
+      <a href="#privacy">Privacy</a>
+      <a class="nav-cta" href="https://github.com/viperwraith47/Morrow/releases/latest/download/Morrow.dmg" target="_blank" rel="noopener noreferrer">Download DMG <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="shell hero" aria-labelledby="hero-title">
+      <div>
+        <p class="eyebrow">A thoughtful wallpaper browser for Mac</p>
+        <h1 id="hero-title">Find a view that feels <em>like yours.</em></h1>
+        <p class="hero-copy">Morrow makes it easy to discover a new desktop perspective, keep the images you love, and set the one that feels right—without accounts, complicated setup, or scheduled changes.</p>
+        <div class="button-row">
+          <a class="button" href="https://github.com/viperwraith47/Morrow/releases/latest/download/Morrow.dmg" target="_blank" rel="noopener noreferrer">Download latest Morrow.dmg <span aria-hidden="true">↗</span></a>
+          <a class="button secondary" href="https://github.com/viperwraith47/Morrow/releases" target="_blank" rel="noopener noreferrer">View all releases</a>
+        </div>
+        <p class="hero-note">Release asset must be named <code>Morrow.dmg</code>. Downloads follow repository visibility.</p>
+        <p class="hero-note">Native SwiftUI · macOS 14+ · Wikimedia Commons · No API key required</p>
+      </div>
+
+      <div class="hero-visual" aria-label="Illustration of the Morrow wallpaper browser">
+        <div class="visual-orbit" aria-hidden="true"></div>
+        <div class="app-window">
+          <div class="window-bar">
+            <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+            <span>MORROW &nbsp; / &nbsp; DISCOVER</span>
+            <span aria-hidden="true">◌</span>
+          </div>
+          <div class="window-body">
+            <aside class="mock-sidebar" aria-hidden="true">
+              <div class="mock-brand"><img src="Morrow/Assets.xcassets/AppIcon.appiconset/icon_128x128.png" alt=""> Morrow</div>
+              <div class="mock-label">Explore</div>
+              <div class="mock-item active"><span class="mock-icon">✦</span> For You</div>
+              <div class="mock-item"><span class="mock-icon">⌁</span> Nature</div>
+              <div class="mock-item"><span class="mock-icon">▤</span> Architecture</div>
+              <div class="mock-item"><span class="mock-icon">◉</span> Minimal</div>
+              <div class="mock-label">Library</div>
+              <div class="mock-item"><span class="mock-icon">♡</span> Saved</div>
+              <div class="mock-item"><span class="mock-icon">↓</span> Offline</div>
+            </aside>
+            <div class="mock-grid-wrap" aria-hidden="true">
+              <h2 class="mock-title">Discover</h2>
+              <div class="mock-search">⌕ &nbsp; Search wallpapers</div>
+              <div class="mock-grid">
+                <div><div class="mock-photo photo-one"></div><div class="mock-caption">Evening light</div></div>
+                <div><div class="mock-photo photo-two"></div><div class="mock-caption">Quiet horizon</div></div>
+                <div><div class="mock-photo photo-three"></div><div class="mock-caption">Open country</div></div>
+                <div><div class="mock-photo photo-four"></div><div class="mock-caption">Last sun</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="offline-chip"><span aria-hidden="true">↓</span><span>Kept close<small>Available offline</small></span></div>
+      </div>
+    </section>
+
+    <div class="trust-strip" aria-label="Morrow highlights">
+      <div class="shell trust-items">
+        <span class="trust-item"><b aria-hidden="true">✦</b> CC0-focused discovery</span>
+        <span class="trust-item"><b aria-hidden="true">♡</b> Personal collections</span>
+        <span class="trust-item"><b aria-hidden="true">↓</b> Full-resolution offline copies</span>
+        <span class="trust-item"><b aria-hidden="true">⌘</b> Built for macOS</span>
+      </div>
+    </div>
+
+    <section class="shell section" id="features" aria-labelledby="features-title">
+      <div class="section-heading">
+        <p class="eyebrow">From discovery to desktop</p>
+        <h2 id="features-title">A small library of views worth keeping.</h2>
+        <p>Start with a mood, a subject, or a search. Morrow brings the image, its source details, and the tools to keep or use it together in one native Mac app.</p>
+      </div>
+      <div class="feature-grid">
+        <article class="feature-card">
+          <div class="feature-symbol" aria-hidden="true">⌕</div>
+          <h3>Find your next view</h3>
+          <p>Explore For You or browse Nature, Architecture, Minimal, Ocean, and Abstract. Search Commons with your own terms, filter by portrait or landscape, and keep scrolling as more results load.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-symbol" aria-hidden="true">♡</div>
+          <h3>Make it yours</h3>
+          <p>Save favorites right from the grid. Build named collections for different moods and spaces, and return to them whenever you want.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-symbol" aria-hidden="true">↓</div>
+          <h3>Keep it close</h3>
+          <p>Store the full-resolution original offline, independent of favorites. Preview it or apply it later—even when you’re away from a connection.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-symbol" aria-hidden="true">◉</div>
+          <h3>Know what you’re seeing</h3>
+          <p>Open a larger preview to see the title and available creator, source, and license details, then follow through to the original Commons file page.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-symbol" aria-hidden="true">▧</div>
+          <h3>Use the original</h3>
+          <p>Download an image to the folder you choose, or set it as the wallpaper on every connected display. Morrow keeps a copy in your Pictures folder.</p>
+        </article>
+        <article class="feature-card">
+          <div class="feature-symbol" aria-hidden="true">⌘</div>
+          <h3>Stay in your own flow</h3>
+          <p>No Morrow account, API key, advertising, or scheduled rotation. Browse and apply wallpapers when it suits you.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="shell workflow-section" aria-labelledby="workflow-title">
+      <div class="workflow-panel">
+        <p class="eyebrow">A simple path from search to screen</p>
+        <h2 id="workflow-title">Discover. Decide. Settle in.</h2>
+        <p>Morrow searches Wikimedia Commons for bitmap files matching wallpaper or background terms and tagged CC0. It checks the returned license metadata before showing a result, then lets you choose what happens next.</p>
+        <div class="steps">
+          <article class="step"><span class="step-num">01</span><h3>Browse</h3><p>Pick a category, enter a search, or explore For You.</p></article>
+          <article class="step"><span class="step-num">02</span><h3>Preview</h3><p>Inspect the image and available source and license information.</p></article>
+          <article class="step"><span class="step-num">03</span><h3>Keep</h3><p>Save a favorite, organize it, or store the original offline.</p></article>
+          <article class="step"><span class="step-num">04</span><h3>Make it your desktop</h3><p>Apply the image to your connected displays whenever you choose.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell section local-section" id="privacy" aria-labelledby="privacy-title">
+      <div class="local-illustration" aria-hidden="true">
+        <div class="folder-stack"><div class="folder back"></div><div class="folder"></div><div class="folder front"><div class="folder-image"></div></div></div>
+      </div>
+      <div class="local-copy">
+        <p class="eyebrow">Your library stays local</p>
+        <h2 id="privacy-title">Keep your favorites on your Mac.</h2>
+        <p>Morrow has no account system, analytics, advertising, or cloud sync. Search and image requests go directly from your Mac to Wikimedia Commons; Wikimedia receives the normal connection information needed to serve them, such as your IP address and request headers.</p>
+        <div class="storage-list">
+          <div class="storage-row"><span class="storage-check" aria-hidden="true">✓</span><span><b>Favorites and collections</b> are saved in the app’s local preferences.</span></div>
+          <div class="storage-row"><span class="storage-check" aria-hidden="true">✓</span><span><b>Offline originals</b> are saved in Morrow’s sandboxed Application Support folder.</span></div>
+          <div class="storage-row"><span class="storage-check" aria-hidden="true">✓</span><span><b>Applied wallpapers</b> are copied to <code>~/Pictures/Morrow Wallpapers</code>.</span></div>
+          <div class="storage-row"><span class="storage-check" aria-hidden="true">✓</span><span><b>Downloads</b> go to the location you select.</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell section license-section" aria-label="Source and license details">
+      <div class="license-card">
+        <div>
+          <h3>Open source details for every image</h3>
+          <p>Morrow displays creator, source, and license details when Commons provides them, and links back to the file page. Morrow is independent and is not endorsed by the Wikimedia Foundation.</p>
+        </div>
+        <div>
+          <h3>CC0, with care</h3>
+          <p>Morrow searches the CC0 category and checks per-file license metadata. Commons information is community-maintained, not a legal guarantee. Review the file page and verify details before relying on a license. Learn about <a href="https://creativecommons.org/publicdomain/zero/1.0/" target="_blank" rel="noopener noreferrer">CC0 1.0</a> and visit <a href="https://commons.wikimedia.org/" target="_blank" rel="noopener noreferrer">Wikimedia Commons</a>.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="shell section build-section" id="build" aria-labelledby="build-title">
+      <div class="build-card">
+        <div>
+          <p class="eyebrow">Native SwiftUI · macOS 14+</p>
+          <h2 id="build-title">Made for the Mac desktop.</h2>
+          <p>Build Morrow from source with a full Xcode installation. The project has no third-party package dependencies and includes a script that builds the app and packages a disk image.</p>
+          <code class="code-pill">./build.sh</code>
+        </div>
+        <div class="build-meta"><strong>Build outputs</strong>.build/Build/Products/Release/Morrow.app<br>Morrow.dmg at the repository root</div>
+      </div>
+      <p class="hero-note">The current build is ad-hoc signed and not notarized. For broad distribution, use Developer ID signing and notarization.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <span>Designed and developed by <a href="https://github.com/viperwraith47" target="_blank" rel="noopener noreferrer">Viperwraith47</a>.</span>
+      <span>Images from Wikimedia Commons contributors · <a href="https://foundation.wikimedia.org/wiki/Policy:Privacy_policy" target="_blank" rel="noopener noreferrer">Wikimedia privacy policy</a></span>
+    </div>
+  </footer>
+</body>
+</html>
