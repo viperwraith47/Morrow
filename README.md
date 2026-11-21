@@ -11,7 +11,7 @@
   <img src="https://img.shields.io/badge/Images-Wallhaven%20%7C%20Pixabay-green" alt="Wallhaven and Pixabay sources" />
 </p>
 
-**Morrow** is a native macOS app for finding, organizing, and setting desktop wallpapers. Choose Wallhaven for public SFW search or Pixabay with your own API key. Preview source and available rights information, save favorites, group them into collections, keep images offline, and apply a wallpaper to all connected displays.
+**Morrow** is a native macOS app for finding, organizing, and setting desktop wallpapers. Choose Wallhaven for public SFW results in its General category only (excluding Anime and People), or choose Pixabay and search with your own API key. Preview source and available rights information, save favorites, group them into collections, keep images offline, and apply a wallpaper to all connected displays.
 
 Morrow is built with **Swift** and **SwiftUI**. Select Wallhaven or Pixabay in Settings; Wallhaven needs no key, while Pixabay requires a personal API key stored in macOS Keychain. If Pixabay is selected without a key, Morrow asks you to add one and does not switch providers. Your library stays on your Mac. Discovery and wallpaper changes are manual—Morrow does not rotate wallpapers on a schedule.
 
@@ -31,8 +31,8 @@ Morrow is built with **Swift** and **SwiftUI**. Select Wallhaven or Pixabay in S
 - **🖼️ Large previews:** Open a wallpaper to inspect available quality, dimensions, file size, upload date, provider, source, and rights information, with a link to its Wallhaven, Pixabay, or saved Commons page.
 - **❤️ Favorites:** Save and remove wallpapers from the grid or preview; saved wallpapers are available in your local library.
 - **📚 Collections:** Create, rename, and delete named collections to organize favorites. A favorite can appear in multiple collections.
-- **📥 Offline library:** Keep the full-resolution original on your Mac, then browse, preview, or apply it without an internet connection.
-- **⬇️ Downloads:** Save the original image to a location you choose.
+- **📥 Offline library:** Keep the highest-resolution image available from the selected provider on your Mac, then browse, preview, or apply it without an internet connection.
+- **⬇️ Downloads:** Save the best available image rendition to a location you choose.
 - **🖥️ Set as Wallpaper:** Apply an image to all connected displays. Morrow also keeps a copy in `~/Pictures/Morrow Wallpapers`.
 - **🔒 Local-first privacy:** Favorites, collections, and offline copies stay on this Mac; Morrow has no accounts, advertising, analytics, or cloud sync.
 - **⚙️ Native Mac interface:** A SwiftUI app with a sidebar, searchable wallpaper grid, orientation controls, preview window, and Settings and Credits panes.
