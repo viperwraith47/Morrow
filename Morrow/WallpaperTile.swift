@@ -1,10 +1,10 @@
+import AppKit
 import SwiftUI
 
 struct WallpaperTile: View {
-    let photo: UnsplashPhoto
-    let isSaved: Bool
+    let photo: WikimediaPhoto
+    @ObservedObject var store: WallpaperStore
     let onSelect: () -> Void
-    let onToggleSaved: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 9) {
@@ -19,18 +19,30 @@ struct WallpaperTile: View {
                 .buttonStyle(.plain)
                 .accessibilityLabel("Preview \(photo.title)")
 
-                Button(action: onToggleSaved) {
-                    Image(systemName: isSaved ? "heart.fill" : "heart")
+                Button {
+                    store.toggleSaved(photo)
+                } label: {
+                    Image(systemName: store.isSaved(photo) ? "heart.fill" : "heart")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(isSaved ? Color.accentColor : Color.primary)
+                        .foregroundStyle(store.isSaved(photo) ? Color.accentColor : Color.primary)
                         .frame(width: 30, height: 30)
                         .background(.regularMaterial, in: Circle())
                         .contentShape(Circle())
                 }
                 .buttonStyle(.plain)
                 .padding(9)
-                .help(isSaved ? "Remove from Saved" : "Save Wallpaper")
-                .accessibilityLabel(isSaved ? "Remove from Saved" : "Save Wallpaper")
+                .help(store.isSaved(photo) ? "Remove from Saved" : "Save Wallpaper")
+                .accessibilityLabel(store.isSaved(photo) ? "Remove from Saved" : "Save Wallpaper")
+
+                if store.isOffline(photo) || store.isKeepingOffline(photo) {
+                    Image(systemName: store.isOffline(photo) ? "checkmark.circle.fill" : "arrow.down.circle")
+                        .font(.system(size: 15, weight: .semibold))
+                        .padding(7)
+                        .background(.regularMaterial, in: Circle())
+                        .padding(9)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                        .help(store.isOffline(photo) ? "Available offline" : "Saving offline…")
+                }
             }
 
             HStack(alignment: .firstTextBaseline, spacing: 8) {
@@ -39,58 +51,112 @@ struct WallpaperTile: View {
                         .font(.subheadline.weight(.medium))
                         .lineLimit(1)
                         .foregroundStyle(.primary)
-                    Text("by \(photo.creditName)")
-                        .font(.caption)
-                        .lineLimit(1)
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 5) {
+                        Text("by \(photo.creditName)")
+                            .lineLimit(1)
+                        if store.isOffline(photo) {
+                            Image(systemName: "arrow.down.circle.fill")
+                                .help("Available offline")
+                        }
+                    }
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 }
                 Spacer(minLength: 0)
             }
             .padding(.horizontal, 2)
         }
         .contextMenu {
-            Button(isSaved ? "Remove from Saved" : "Save Wallpaper", systemImage: isSaved ? "heart.slash" : "heart", action: onToggleSaved)
-            if let address = photo.links?.html, let url = attributedURL(address) {
-                Link("View on Unsplash", destination: url)
+            Button(
+                store.isSaved(photo) ? "Remove from Saved" : "Save Wallpaper",
+                systemImage: store.isSaved(photo) ? "heart.slash" : "heart"
+            ) {
+                store.toggleSaved(photo)
+            }
+            Button(
+                store.isOffline(photo) ? "Remove Offline Copy" : "Keep Offline",
+                systemImage: store.isOffline(photo) ? "trash" : "arrow.down.circle"
+            ) {
+                Task { await store.toggleOffline(photo) }
+            }
+            .disabled(store.isKeepingOffline(photo))
+
+            if store.isSaved(photo) && !store.collections.isEmpty {
+                Menu {
+                    ForEach(store.collections) { collection in
+                        Button {
+                            store.toggleCollectionMembership(photo, collectionID: collection.id)
+                        } label: {
+                            if store.isInCollection(photo, collectionID: collection.id) {
+                                Label(collection.name, systemImage: "checkmark")
+                            } else {
+                                Text(collection.name)
+                            }
+                        }
+                    }
+                } label: {
+                    Label("Collections", systemImage: "folder.badge.plus")
+                }
+            }
+
+            if let url = photo.sourceURL {
+                Link("View on Wikimedia Commons", destination: url)
             }
         }
     }
 
     @ViewBuilder
     private var wallpaperImage: some View {
-        if let url = photo.urls.smallURL ?? photo.urls.regularURL {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable().scaledToFill()
-                case .failure:
-                    Rectangle()
-                        .fill(.quaternary)
-                        .overlay {
+        WikimediaImageView(url: photo.thumbnailURL, localImageURL: store.offlineURL(for: photo)) { image, isLoading in
+            if let image {
+                Image(nsImage: image).resizable().scaledToFill()
+            } else {
+                Rectangle()
+                    .fill(.quaternary)
+                    .overlay {
+                        if isLoading {
+                            ProgressView()
+                        } else {
                             Image(systemName: "photo")
                                 .font(.title2)
                                 .foregroundStyle(.secondary)
                         }
-                case .empty:
-                    Rectangle()
-                        .fill(.quaternary)
-                        .overlay { ProgressView() }
-                @unknown default:
-                    Rectangle().fill(.quaternary)
-                }
+                    }
             }
-        } else {
-            Rectangle().fill(.quaternary)
         }
     }
 }
 
-func attributedURL(_ address: String) -> URL? {
-    guard var components = URLComponents(string: address) else { return nil }
-    var items = components.queryItems ?? []
-    items.removeAll { $0.name == "utm_source" || $0.name == "utm_medium" }
-    items.append(URLQueryItem(name: "utm_source", value: "morrow"))
-    items.append(URLQueryItem(name: "utm_medium", value: "referral"))
-    components.queryItems = items
-    return components.url
+struct WikimediaImageView<Content: View>: View {
+    let url: URL?
+    let localImageURL: URL?
+    let content: (NSImage?, Bool) -> Content
+    @State private var image: NSImage?
+    @State private var isLoading = false
+
+    init(
+        url: URL?,
+        localImageURL: URL? = nil,
+        @ViewBuilder content: @escaping (NSImage?, Bool) -> Content
+    ) {
+        self.url = url
+        self.localImageURL = localImageURL
+        self.content = content
+    }
+
+    var body: some View {
+        content(image, isLoading)
+            .task(id: localImageURL ?? url) {
+                image = nil
+                isLoading = true
+                defer { isLoading = false }
+
+                if let localImageURL, let localImage = NSImage(contentsOf: localImageURL) {
+                    image = localImage
+                    return
+                }
+                guard let url else { return }
+                image = await WikimediaCommonsService.shared.image(at: url)
+            }
+    }
 }

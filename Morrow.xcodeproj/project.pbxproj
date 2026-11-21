@@ -9,9 +9,8 @@
 		A10000000000000000000001 /* MorrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* MorrowApp.swift */; };
 		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* ContentView.swift */; };
 		A10000000000000000000003 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000003 /* Models.swift */; };
-		A10000000000000000000004 /* UnsplashService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000004 /* UnsplashService.swift */; };
+		A10000000000000000000004 /* WikimediaCommonsService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000004 /* WikimediaCommonsService.swift */; };
 		A10000000000000000000005 /* WallpaperStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000005 /* WallpaperStore.swift */; };
-		A10000000000000000000006 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000006 /* KeychainStore.swift */; };
 		A10000000000000000000007 /* WallpaperTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000007 /* WallpaperTile.swift */; };
 		A10000000000000000000008 /* PhotoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000008 /* PhotoDetailView.swift */; };
 		A10000000000000000000009 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000009 /* SettingsView.swift */; };
@@ -23,9 +22,8 @@
 		B20000000000000000000001 /* MorrowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MorrowApp.swift; sourceTree = "<group>"; };
 		B20000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		B20000000000000000000003 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
-		B20000000000000000000004 /* UnsplashService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnsplashService.swift; sourceTree = "<group>"; };
+		B20000000000000000000004 /* WikimediaCommonsService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WikimediaCommonsService.swift; sourceTree = "<group>"; };
 		B20000000000000000000005 /* WallpaperStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperStore.swift; sourceTree = "<group>"; };
-		B20000000000000000000006 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		B20000000000000000000007 /* WallpaperTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperTile.swift; sourceTree = "<group>"; };
 		B20000000000000000000008 /* PhotoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoDetailView.swift; sourceTree = "<group>"; };
 		B20000000000000000000009 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -59,9 +57,8 @@
 				B20000000000000000000001 /* MorrowApp.swift */,
 				B20000000000000000000002 /* ContentView.swift */,
 				B20000000000000000000003 /* Models.swift */,
-				B20000000000000000000004 /* UnsplashService.swift */,
+				B20000000000000000000004 /* WikimediaCommonsService.swift */,
 				B20000000000000000000005 /* WallpaperStore.swift */,
-				B20000000000000000000006 /* KeychainStore.swift */,
 				B20000000000000000000007 /* WallpaperTile.swift */,
 				B20000000000000000000008 /* PhotoDetailView.swift */,
 				B20000000000000000000009 /* SettingsView.swift */,
@@ -139,9 +136,8 @@
 				A10000000000000000000001 /* MorrowApp.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* Models.swift in Sources */,
-				A10000000000000000000004 /* UnsplashService.swift in Sources */,
+				A10000000000000000000004 /* WikimediaCommonsService.swift in Sources */,
 				A10000000000000000000005 /* WallpaperStore.swift in Sources */,
-				A10000000000000000000006 /* KeychainStore.swift in Sources */,
 				A10000000000000000000007 /* WallpaperTile.swift in Sources */,
 				A10000000000000000000008 /* PhotoDetailView.swift in Sources */,
 				A10000000000000000000009 /* SettingsView.swift in Sources */,

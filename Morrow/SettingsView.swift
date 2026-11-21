@@ -1,22 +1,22 @@
 import AppKit
 import SwiftUI
 
-enum SettingsTab: String, CaseIterable, Identifiable {
-    case unsplash
+private enum SettingsTab: String, CaseIterable, Identifiable {
+    case photoSource
     case credits
 
     var id: Self { self }
 
     var title: String {
         switch self {
-        case .unsplash: "Unsplash"
+        case .photoSource: "Photo Source"
         case .credits: "Credits"
         }
     }
 
     var systemImage: String {
         switch self {
-        case .unsplash: "key.horizontal"
+        case .photoSource: "photo.on.rectangle.angled"
         case .credits: "person.2"
         }
     }
@@ -24,13 +24,13 @@ enum SettingsTab: String, CaseIterable, Identifiable {
 
 struct SettingsView: View {
     @ObservedObject var store: WallpaperStore
-    @State private var selectedTab: SettingsTab? = .unsplash
-    @State private var navigationHistory: [SettingsTab] = [.unsplash]
+    @State private var selectedTab: SettingsTab? = .photoSource
+    @State private var navigationHistory: [SettingsTab] = [.photoSource]
     @State private var historyIndex = 0
     @State private var isHistoryNavigation = false
 
     private var activeTab: SettingsTab {
-        selectedTab ?? .unsplash
+        selectedTab ?? .photoSource
     }
 
     var body: some View {
@@ -59,8 +59,8 @@ struct SettingsView: View {
         } detail: {
             Group {
                 switch activeTab {
-                case .unsplash:
-                    UnsplashSettingsPane(store: store)
+                case .photoSource:
+                    PhotoSourceSettingsPane()
                 case .credits:
                     CreditsSettingsPane()
                 }
@@ -110,60 +110,32 @@ struct SettingsView: View {
     }
 }
 
-private struct UnsplashSettingsPane: View {
-    @ObservedObject var store: WallpaperStore
-    @State private var accessKey = ""
-
+private struct PhotoSourceSettingsPane: View {
     var body: some View {
         Form {
-            Section("Unsplash API") {
-                Text("Connect your free Unsplash developer app to browse and download wallpapers.")
+            Section("Photo source") {
+                Label("Wikimedia Commons", systemImage: "globe")
+                    .font(.headline)
+                Text("Morrow searches Commons for bitmap files matching wallpaper or background terms, tagged CC0, and checks each result’s license metadata before displaying it. License and creator details are available with every wallpaper.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-
-                SecureField("Access Key", text: $accessKey)
-                    .textFieldStyle(.roundedBorder)
-                    .disabled(store.isValidatingKey)
-
-                HStack {
-                    Button(store.isValidatingKey ? "Checking…" : "Connect") {
-                        Task {
-                            await store.connect(accessKey: accessKey)
-                            if store.connectionMessage?.hasPrefix("Connected to Unsplash.") == true {
-                                accessKey = ""
-                            }
-                        }
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(store.isValidatingKey || accessKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-
-                    if store.isConnected {
-                        Button("Remove Key", role: .destructive) {
-                            store.removeAccessKey()
-                            accessKey = ""
-                        }
-                    }
-
-                    Link("Get a free key", destination: URL(string: "https://unsplash.com/oauth/applications")!)
-                }
-
-                if let message = store.connectionMessage {
-                    let isSuccess = message.hasPrefix("Connected to Unsplash.")
-                    Label(message, systemImage: isSuccess ? "checkmark.circle" : "info.circle")
-                        .font(.callout)
-                        .foregroundStyle(isSuccess ? .secondary : .primary)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
+                Link("Visit Wikimedia Commons", destination: URL(string: "https://commons.wikimedia.org")!)
+                Link("About the CC0 1.0 license", destination: URL(string: "https://creativecommons.org/publicdomain/zero/1.0/")!)
             }
 
             Section("Privacy") {
-                Label("Your Access Key is stored in macOS Keychain. Photo requests go directly from this app to Unsplash.", systemImage: "lock.shield")
+                Label("Searches and image requests go directly from this Mac to Wikimedia. The service receives standard connection information, such as your IP address and request headers.", systemImage: "lock.shield")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Use your public Access Key, not the Secret Key. Unsplash demo apps are limited to 50 API requests per hour.")
+                Text("Morrow does not use accounts, analytics, or advertising. Favorites and collections are stored on this Mac. Wallpapers you choose to keep offline, download, or apply are saved locally and are not synced.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                Text("Older Morrow versions may have stored an Unsplash key or favorites. This version does not read or delete the old keychain item, and keeps the new Commons favorites in separate local storage.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Link("Wikimedia Foundation privacy policy", destination: URL(string: "https://foundation.wikimedia.org/wiki/Policy:Privacy_policy")!)
             }
         }
         .formStyle(.grouped)
@@ -202,10 +174,10 @@ private struct CreditsSettingsPane: View {
             }
 
             Section("Photo source") {
-                Text("Morrow is powered by the Unsplash API. Photographers are credited with their photos.")
+                Text("Morrow uses Wikimedia Commons and displays CC0 license, source, and creator information with each image when available. Morrow is an independent app and is not endorsed by the Wikimedia Foundation.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Link("Visit Unsplash", destination: URL(string: "https://unsplash.com")!)
+                Link("Visit Wikimedia Commons", destination: URL(string: "https://commons.wikimedia.org")!)
             }
         }
         .formStyle(.grouped)
