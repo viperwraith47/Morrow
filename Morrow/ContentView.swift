@@ -2,7 +2,9 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var store: WallpaperStore
-    @State private var selectedPhoto: UnsplashPhoto?
+    @State private var selectedPhoto: WikimediaPhoto?
+    @State private var isPresentingNewCollection = false
+    @State private var editingCollection: WallpaperCollection?
 
     private let columns = [GridItem(.adaptive(minimum: 190, maximum: 300), spacing: 18, alignment: .top)]
 
@@ -34,6 +36,33 @@ struct ContentView: View {
                     Label("Saved", systemImage: "heart")
                         .badge(store.favorites.count)
                         .tag(SidebarDestination.saved)
+                    Label("Available Offline", systemImage: "arrow.down.circle")
+                        .badge(store.offlinePhotos.count)
+                        .tag(SidebarDestination.offline)
+                }
+
+                Section {
+                    ForEach(store.collections) { collection in
+                        Label(collection.name, systemImage: "rectangle.stack")
+                            .badge(collection.photoIDs.count)
+                            .tag(SidebarDestination.collection(collection.id))
+                            .contextMenu {
+                                Button("Rename Collection…", systemImage: "pencil") {
+                                    editingCollection = collection
+                                }
+                                Button("Delete Collection", systemImage: "trash", role: .destructive) {
+                                    store.deleteCollection(collection.id)
+                                }
+                            }
+                    }
+                    Button {
+                        isPresentingNewCollection = true
+                    } label: {
+                        Label("New Collection", systemImage: "plus")
+                    }
+                    .buttonStyle(.plain)
+                } header: {
+                    Text("Collections")
                 }
             }
             .listStyle(.sidebar)
@@ -64,6 +93,7 @@ struct ContentView: View {
                         }
                         .help("Refresh wallpapers")
                         .keyboardShortcut("r", modifiers: .command)
+                        .disabled(store.isLocalLibrarySelection || store.isLoading)
 
                         Button {
                             SettingsWindowController.show(store: store)
@@ -86,6 +116,16 @@ struct ContentView: View {
         }
         .sheet(item: $selectedPhoto) { photo in
             PhotoDetailView(photo: photo, store: store)
+        }
+        .sheet(isPresented: $isPresentingNewCollection) {
+            CollectionNameSheet(title: "New Collection", initialName: "") { name in
+                _ = store.createCollection(named: name)
+            }
+        }
+        .sheet(item: $editingCollection) { collection in
+            CollectionNameSheet(title: "Rename Collection", initialName: collection.name) { name in
+                store.renameCollection(collection.id, to: name)
+            }
         }
         .alert("Morrow", isPresented: Binding(
             get: { store.alertMessage != nil },
@@ -127,9 +167,7 @@ struct ContentView: View {
 
     @ViewBuilder
     private var content: some View {
-        if !store.isConnected {
-            connectPrompt
-        } else if store.isLoading && store.displayedPhotos.isEmpty {
+        if store.isLoading && store.displayedPhotos.isEmpty && !store.isLocalLibrarySelection {
             ProgressView("Finding your next favorite…")
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else if store.displayedPhotos.isEmpty {
@@ -141,21 +179,20 @@ struct ContentView: View {
                     ForEach(Array(displayedPhotos.enumerated()), id: \.element.id) { item in
                         WallpaperTile(
                             photo: item.element,
-                            isSaved: store.isSaved(item.element),
-                            onSelect: { selectedPhoto = item.element },
-                            onToggleSaved: { store.toggleSaved(item.element) }
+                            store: store,
+                            onSelect: { selectedPhoto = item.element }
                         )
                         .onAppear {
                             guard item.offset >= displayedPhotos.count - 4,
                                   store.canLoadMore,
-                                  store.selection != .saved else { return }
+                                  !store.isLocalLibrarySelection else { return }
                             Task { await store.loadMore() }
                         }
                     }
                 }
                 .padding(24)
 
-                if store.isLoading && store.canLoadMore && store.selection != .saved {
+                if store.isLoading && store.canLoadMore && !store.isLocalLibrarySelection {
                     ProgressView()
                         .controlSize(.small)
                         .frame(maxWidth: .infinity)
@@ -165,31 +202,34 @@ struct ContentView: View {
         }
     }
 
-    private var connectPrompt: some View {
-        ContentUnavailableView {
-            Label("Bring the world in.", systemImage: "photo.stack")
-        } description: {
-            Text("Connect a free Unsplash Access Key to browse, save, and download high-resolution wallpapers. Your key is kept in macOS Keychain.")
-        } actions: {
-            Button("Open Settings") { SettingsWindowController.show(store: store) }
-                .buttonStyle(.borderedProminent)
-            Link("Create a free Unsplash developer app", destination: URL(string: "https://unsplash.com/oauth/applications")!)
-        }
-    }
-
     private var emptyState: some View {
         let isSaved = store.selection == .saved
+        let isOffline = store.selection == .offline
+        let isCollection: Bool = {
+            guard let selection = store.selection else { return false }
+            if case .collection(_) = selection { return true }
+            return false
+        }()
         let isSearching = store.selection == nil || !store.searchText.isEmpty
+        let title = isSaved ? "No Saved Wallpapers" :
+            isOffline ? "No Offline Wallpapers" :
+            isCollection ? "This Collection Is Empty" :
+            isSearching ? "No Wallpapers Found" : "No Photos Yet"
+        let description = isSaved ? "Save a few wallpapers and they’ll be waiting here." :
+            isOffline ? "Keep a wallpaper offline from its preview or tile menu to find it here." :
+            isCollection ? "Add saved wallpapers to this collection from a wallpaper’s preview or tile menu." :
+            "Try another search or explore a different mood."
+
         return ContentUnavailableView {
-            Label(
-                isSaved ? "No Saved Wallpapers" : (isSearching ? "No Wallpapers Found" : "No Photos Yet"),
-                systemImage: isSaved ? "heart" : "photo.on.rectangle.angled"
-            )
+            Label(title, systemImage: isSaved ? "heart" : isOffline ? "arrow.down.circle" : isCollection ? "rectangle.stack" : "photo.on.rectangle.angled")
         } description: {
-            Text(isSaved ? "Save a few wallpapers and they’ll be waiting here." : "Try another search or explore a different mood.")
+            Text(description)
         } actions: {
-            if isSaved {
+            if isSaved || isOffline || isCollection {
                 Button("Browse Discover") { store.selection = .forYou }
+                    .buttonStyle(.bordered)
+            } else if store.canLoadMore {
+                Button("Keep Looking") { Task { await store.loadMore() } }
                     .buttonStyle(.bordered)
             } else if isSearching {
                 Button("Clear Search") { store.clearSearch() }
@@ -205,12 +245,56 @@ struct ContentView: View {
         switch store.selection {
         case .saved:
             "The photographs you’ve kept close."
+        case .offline:
+            "Your wallpapers, ready without a connection."
+        case .collection(_):
+            "A collection for browsing and applying wallpapers by hand."
         case .category(let category):
             "A little inspiration, gathered around \(category)."
         case .forYou:
             "Thoughtful photographs for the spaces you look at every day."
         case nil:
-            "A new point of view, found on Unsplash."
+            "A new point of view, found on Wikimedia Commons."
         }
+    }
+}
+
+struct CollectionNameSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @State private var name: String
+    let title: String
+    let onSave: (String) -> Void
+
+    init(title: String, initialName: String, onSave: @escaping (String) -> Void) {
+        self.title = title
+        self.onSave = onSave
+        _name = State(initialValue: initialName)
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Text(title)
+                .font(.title2.weight(.semibold))
+            TextField("Collection name", text: $name)
+                .textFieldStyle(.roundedBorder)
+                .onSubmit(save)
+            HStack {
+                Spacer()
+                Button("Cancel") { dismiss() }
+                    .keyboardShortcut(.cancelAction)
+                Button("Save", action: save)
+                    .keyboardShortcut(.defaultAction)
+                    .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            }
+        }
+        .padding(20)
+        .frame(width: 380)
+    }
+
+    private func save() {
+        let trimmedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedName.isEmpty else { return }
+        onSave(trimmedName)
+        dismiss()
     }
 }

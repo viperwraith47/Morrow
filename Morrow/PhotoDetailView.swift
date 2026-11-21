@@ -1,9 +1,10 @@
 import SwiftUI
 
 struct PhotoDetailView: View {
-    let photo: UnsplashPhoto
+    let photo: WikimediaPhoto
     @ObservedObject var store: WallpaperStore
     @Environment(\.dismiss) private var dismiss
+    @State private var isPresentingNewCollection = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -33,24 +34,34 @@ struct PhotoDetailView: View {
                                 .font(.title2.weight(.semibold))
                                 .fontDesign(.serif)
                                 .fixedSize(horizontal: false, vertical: true)
-                            HStack(spacing: 4) {
-                                Text("Photo by")
-                                if let address = photo.user?.links?.html,
-                                   let url = attributedURL(address) {
-                                    Link(photo.creditName, destination: url)
+
+                            if let sourceURL = photo.sourceURL {
+                                Link("Creator: \(photo.creditName)", destination: sourceURL)
+                                    .font(.callout)
+                                Link("View source on Wikimedia Commons", destination: sourceURL)
+                                    .font(.callout)
+                            } else {
+                                Text("Creator: \(photo.creditName)")
+                                    .font(.callout)
+                            }
+
+                            HStack(spacing: 5) {
+                                Text("License:")
+                                if let licenseURL = photo.licenseURL {
+                                    Link(photo.licenseName, destination: licenseURL)
                                 } else {
-                                    Text(photo.creditName)
-                                }
-                                Text("on")
-                                if let address = photo.links?.html,
-                                   let url = attributedURL(address) {
-                                    Link("Unsplash", destination: url)
-                                } else {
-                                    Text("Unsplash")
+                                    Text(photo.licenseName)
                                 }
                             }
                             .font(.callout)
                             .foregroundStyle(.secondary)
+
+                            if let sourceCredit = photo.sourceCredit {
+                                Text("Source details: \(sourceCredit)")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                         Spacer(minLength: 12)
                         Button {
@@ -83,19 +94,73 @@ struct PhotoDetailView: View {
                         .buttonStyle(.bordered)
                         .disabled(store.isDownloading || store.isApplyingWallpaper)
                     }
-                    .padding(.bottom, 5)
+                    .padding(.bottom, 3)
+
+                    HStack(spacing: 12) {
+                        Button {
+                            Task { await store.toggleOffline(photo) }
+                        } label: {
+                            Label(
+                                store.isKeepingOffline(photo) ? "Saving Offline…" : store.isOffline(photo) ? "Remove Offline Copy" : "Keep Offline",
+                                systemImage: store.isOffline(photo) ? "checkmark.circle.fill" : "arrow.down.circle"
+                            )
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(store.isKeepingOffline(photo))
+
+                        Menu {
+                            if store.collections.isEmpty {
+                                Button("No Collections Yet") {}
+                                    .disabled(true)
+                            } else {
+                                ForEach(store.collections) { collection in
+                                    Button {
+                                        store.toggleCollectionMembership(photo, collectionID: collection.id)
+                                    } label: {
+                                        if store.isInCollection(photo, collectionID: collection.id) {
+                                            Label(collection.name, systemImage: "checkmark")
+                                        } else {
+                                            Text(collection.name)
+                                        }
+                                    }
+                                }
+                            }
+                            Divider()
+                            Button("New Collection…", systemImage: "plus") {
+                                isPresentingNewCollection = true
+                            }
+                        } label: {
+                            Label("Collections", systemImage: "folder.badge.plus")
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(!store.isSaved(photo))
+                        .help(store.isSaved(photo) ? "Add this favorite to a collection" : "Save this wallpaper before adding it to a collection")
+
+                        if !store.isSaved(photo) {
+                            Text("Save this wallpaper to add it to a collection.")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
+                        Spacer()
+                    }
+
+                    if store.isOffline(photo) {
+                        Label("The full image is stored on this Mac and can be applied offline.", systemImage: "checkmark.circle.fill")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
                 }
                 .padding(20)
             }
 
             Divider()
             HStack {
-                Text("Please credit the photographer when sharing.")
+                Text("CC0 files are freely reusable; creator and source details are shown as a courtesy.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
-                if let address = photo.links?.html, let url = attributedURL(address) {
-                    Link("View on Unsplash", destination: url)
+                if let sourceURL = photo.sourceURL {
+                    Link("Open file page", destination: sourceURL)
                         .font(.caption)
                 }
             }
@@ -103,6 +168,13 @@ struct PhotoDetailView: View {
             .padding(.vertical, 12)
         }
         .frame(minWidth: 600, idealWidth: 820, minHeight: 520, idealHeight: 680)
+        .sheet(isPresented: $isPresentingNewCollection) {
+            CollectionNameSheet(title: "New Collection", initialName: "") { name in
+                if let collection = store.createCollection(named: name) {
+                    store.toggleCollectionMembership(photo, collectionID: collection.id)
+                }
+            }
+        }
         .alert("Morrow", isPresented: Binding(
             get: { store.alertMessage != nil },
             set: { if !$0 { store.dismissAlert() } }
@@ -115,21 +187,14 @@ struct PhotoDetailView: View {
 
     @ViewBuilder
     private var previewImage: some View {
-        if let url = photo.urls.regularURL ?? photo.urls.fullURL {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image):
-                    image.resizable().scaledToFit()
-                case .failure:
-                    ContentUnavailableView("Image Unavailable", systemImage: "photo")
-                case .empty:
-                    ProgressView("Loading Preview…")
-                @unknown default:
-                    ProgressView()
-                }
+        WikimediaImageView(url: photo.thumbnailURL, localImageURL: store.offlineURL(for: photo)) { image, isLoading in
+            if let image {
+                Image(nsImage: image).resizable().scaledToFit()
+            } else if isLoading {
+                ProgressView("Loading Preview…")
+            } else {
+                ContentUnavailableView("Image Unavailable", systemImage: "photo")
             }
-        } else {
-            ContentUnavailableView("Image Unavailable", systemImage: "photo")
         }
     }
 }
