@@ -1,0 +1,235 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A10000000000000000000001 /* MorrowApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000001 /* MorrowApp.swift */; };
+		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000002 /* ContentView.swift */; };
+		A10000000000000000000003 /* Models.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000003 /* Models.swift */; };
+		A10000000000000000000004 /* UnsplashService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000004 /* UnsplashService.swift */; };
+		A10000000000000000000005 /* WallpaperStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000005 /* WallpaperStore.swift */; };
+		A10000000000000000000006 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000006 /* KeychainStore.swift */; };
+		A10000000000000000000007 /* WallpaperTile.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000007 /* WallpaperTile.swift */; };
+		A10000000000000000000008 /* PhotoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000008 /* PhotoDetailView.swift */; };
+		A10000000000000000000009 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000009 /* SettingsView.swift */; };
+		A1000000000000000000000B /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000011 /* SettingsWindowController.swift */; };
+		A1000000000000000000000A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B2000000000000000000000B /* Assets.xcassets */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		B20000000000000000000001 /* MorrowApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MorrowApp.swift; sourceTree = "<group>"; };
+		B20000000000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B20000000000000000000003 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
+		B20000000000000000000004 /* UnsplashService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UnsplashService.swift; sourceTree = "<group>"; };
+		B20000000000000000000005 /* WallpaperStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperStore.swift; sourceTree = "<group>"; };
+		B20000000000000000000006 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
+		B20000000000000000000007 /* WallpaperTile.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallpaperTile.swift; sourceTree = "<group>"; };
+		B20000000000000000000008 /* PhotoDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PhotoDetailView.swift; sourceTree = "<group>"; };
+		B20000000000000000000009 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		B20000000000000000000011 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
+		B20000000000000000000010 /* Morrow.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Morrow.entitlements; sourceTree = "<group>"; };
+		B2000000000000000000000B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		C30000000000000000000001 /* Morrow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Morrow.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D40000000000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = ();
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		F50000000000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				F50000000000000000000002 /* Morrow */,
+				F50000000000000000000003 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		F50000000000000000000002 /* Morrow */ = {
+			isa = PBXGroup;
+			children = (
+				B20000000000000000000001 /* MorrowApp.swift */,
+				B20000000000000000000002 /* ContentView.swift */,
+				B20000000000000000000003 /* Models.swift */,
+				B20000000000000000000004 /* UnsplashService.swift */,
+				B20000000000000000000005 /* WallpaperStore.swift */,
+				B20000000000000000000006 /* KeychainStore.swift */,
+				B20000000000000000000007 /* WallpaperTile.swift */,
+				B20000000000000000000008 /* PhotoDetailView.swift */,
+				B20000000000000000000009 /* SettingsView.swift */,
+				B20000000000000000000011 /* SettingsWindowController.swift */,
+				B20000000000000000000010 /* Morrow.entitlements */,
+				B2000000000000000000000B /* Assets.xcassets */,
+			);
+			path = Morrow;
+			sourceTree = "<group>";
+		};
+		F50000000000000000000003 /* Products */ = {
+			isa = PBXGroup;
+			children = (C30000000000000000000001 /* Morrow.app */,);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		G60000000000000000000002 /* Morrow */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E80000000000000000000002 /* Build configuration list for PBXNativeTarget "Morrow" */;
+			buildPhases = (
+				D70000000000000000000001 /* Sources */,
+				D40000000000000000000001 /* Frameworks */,
+				D90000000000000000000001 /* Resources */,
+			);
+			buildRules = ();
+			dependencies = ();
+			name = Morrow;
+			packageProductDependencies = ();
+			productName = Morrow;
+			productReference = C30000000000000000000001 /* Morrow.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		G60000000000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 2700;
+				TargetAttributes = {
+					G60000000000000000000002 = {CreatedOnToolsVersion = 27.0; };
+				};
+			};
+			buildConfigurationList = E80000000000000000000001 /* Build configuration list for PBXProject "Morrow" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base,);
+			mainGroup = F50000000000000000000001;
+			productRefGroup = F50000000000000000000003 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (G60000000000000000000002 /* Morrow */,);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		D90000000000000000000001 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (A1000000000000000000000A /* Assets.xcassets in Resources */,);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D70000000000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A10000000000000000000001 /* MorrowApp.swift in Sources */,
+				A10000000000000000000002 /* ContentView.swift in Sources */,
+				A10000000000000000000003 /* Models.swift in Sources */,
+				A10000000000000000000004 /* UnsplashService.swift in Sources */,
+				A10000000000000000000005 /* WallpaperStore.swift in Sources */,
+				A10000000000000000000006 /* KeychainStore.swift in Sources */,
+				A10000000000000000000007 /* WallpaperTile.swift in Sources */,
+				A10000000000000000000008 /* PhotoDetailView.swift in Sources */,
+				A10000000000000000000009 /* SettingsView.swift in Sources */,
+				A1000000000000000000000B /* SettingsWindowController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		H90000000000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		H90000000000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		H90000000000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Morrow/Morrow.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_KEY_CFBundleDisplayName = Morrow;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stillroom.wallpapers;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		H90000000000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Morrow/Morrow.entitlements;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				CURRENT_PROJECT_VERSION = 1;
+				ENABLE_APP_SANDBOX = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				INFOPLIST_KEY_CFBundleDisplayName = Morrow;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.stillroom.wallpapers;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E80000000000000000000001 /* Build configuration list for PBXProject "Morrow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (H90000000000000000000001 /* Debug */, H90000000000000000000002 /* Release */,);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E80000000000000000000002 /* Build configuration list for PBXNativeTarget "Morrow" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (H90000000000000000000003 /* Debug */, H90000000000000000000004 /* Release */,);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = G60000000000000000000001 /* Project object */;
+}
