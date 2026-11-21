@@ -15,6 +15,8 @@
 		A10000000000000000000008 /* PhotoDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000008 /* PhotoDetailView.swift */; };
 		A10000000000000000000009 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000009 /* SettingsView.swift */; };
 		A1000000000000000000000B /* SettingsWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000011 /* SettingsWindowController.swift */; };
+		A1000000000000000000000C /* PixabayService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000013 /* PixabayService.swift */; };
+		A1000000000000000000000D /* WallhavenService.swift in Sources */ = {isa = PBXBuildFile; fileRef = B20000000000000000000014 /* WallhavenService.swift */; };
 		A1000000000000000000000A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B2000000000000000000000B /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -29,6 +31,9 @@
 		B20000000000000000000009 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		B20000000000000000000011 /* SettingsWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsWindowController.swift; sourceTree = "<group>"; };
 		B20000000000000000000010 /* Morrow.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Morrow.entitlements; sourceTree = "<group>"; };
+		B20000000000000000000012 /* Debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Config/Debug.xcconfig; sourceTree = "<group>"; };
+		B20000000000000000000013 /* PixabayService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixabayService.swift; sourceTree = "<group>"; };
+		B20000000000000000000014 /* WallhavenService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WallhavenService.swift; sourceTree = "<group>"; };
 		B2000000000000000000000B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		C30000000000000000000001 /* Morrow.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Morrow.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -57,6 +62,8 @@
 				B20000000000000000000001 /* MorrowApp.swift */,
 				B20000000000000000000002 /* ContentView.swift */,
 				B20000000000000000000003 /* Models.swift */,
+				B20000000000000000000013 /* PixabayService.swift */,
+				B20000000000000000000014 /* WallhavenService.swift */,
 				B20000000000000000000004 /* WikimediaCommonsService.swift */,
 				B20000000000000000000005 /* WallpaperStore.swift */,
 				B20000000000000000000007 /* WallpaperTile.swift */,
@@ -64,6 +71,7 @@
 				B20000000000000000000009 /* SettingsView.swift */,
 				B20000000000000000000011 /* SettingsWindowController.swift */,
 				B20000000000000000000010 /* Morrow.entitlements */,
+				B20000000000000000000012 /* Debug.xcconfig */,
 				B2000000000000000000000B /* Assets.xcassets */,
 			);
 			path = Morrow;
@@ -136,6 +144,8 @@
 				A10000000000000000000001 /* MorrowApp.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 				A10000000000000000000003 /* Models.swift in Sources */,
+				A1000000000000000000000C /* PixabayService.swift in Sources */,
+				A1000000000000000000000D /* WallhavenService.swift in Sources */,
 				A10000000000000000000004 /* WikimediaCommonsService.swift in Sources */,
 				A10000000000000000000005 /* WallpaperStore.swift in Sources */,
 				A10000000000000000000007 /* WallpaperTile.swift in Sources */,
@@ -170,6 +180,7 @@
 		};
 		H90000000000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = B20000000000000000000012 /* Debug.xcconfig */;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Morrow/Morrow.entitlements;
 				CODE_SIGN_IDENTITY = "-";
@@ -185,6 +196,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.stillroom.wallpapers;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_VERSION = 5.0;
 			};
 			name = Debug;

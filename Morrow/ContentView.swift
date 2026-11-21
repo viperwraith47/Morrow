@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @ObservedObject var store: WallpaperStore
-    @State private var selectedPhoto: WikimediaPhoto?
+    @State private var selectedPhoto: WallpaperPhoto?
     @State private var isPresentingNewCollection = false
     @State private var editingCollection: WallpaperCollection?
 
@@ -211,21 +211,29 @@ struct ContentView: View {
             return false
         }()
         let isSearching = store.selection == nil || !store.searchText.isEmpty
+        let needsPixabayKey = !store.isLocalLibrarySelection && store.requiresPixabayAPIKey
         let title = isSaved ? "No Saved Wallpapers" :
             isOffline ? "No Offline Wallpapers" :
             isCollection ? "This Collection Is Empty" :
+            needsPixabayKey ? "Pixabay API Key Required" :
             isSearching ? "No Wallpapers Found" : "No Photos Yet"
         let description = isSaved ? "Save a few wallpapers and they’ll be waiting here." :
             isOffline ? "Keep a wallpaper offline from its preview or tile menu to find it here." :
             isCollection ? "Add saved wallpapers to this collection from a wallpaper’s preview or tile menu." :
+            needsPixabayKey ? "Add a Pixabay API key in Photo Source Settings. Morrow will stay on Pixabay and will not switch to another source." :
             "Try another search or explore a different mood."
 
         return ContentUnavailableView {
-            Label(title, systemImage: isSaved ? "heart" : isOffline ? "arrow.down.circle" : isCollection ? "rectangle.stack" : "photo.on.rectangle.angled")
+            Label(title, systemImage: isSaved ? "heart" : isOffline ? "arrow.down.circle" : isCollection ? "rectangle.stack" : needsPixabayKey ? "key.horizontal" : "photo.on.rectangle.angled")
         } description: {
             Text(description)
         } actions: {
-            if isSaved || isOffline || isCollection {
+            if needsPixabayKey {
+                Button("Open Photo Source Settings") {
+                    SettingsWindowController.show(store: store)
+                }
+                .buttonStyle(.bordered)
+            } else if isSaved || isOffline || isCollection {
                 Button("Browse Discover") { store.selection = .forYou }
                     .buttonStyle(.bordered)
             } else if store.canLoadMore {
@@ -254,7 +262,7 @@ struct ContentView: View {
         case .forYou:
             "Thoughtful photographs for the spaces you look at every day."
         case nil:
-            "A new point of view, found on Wikimedia Commons."
+            "A new point of view, found on \(store.discoveryProvider.displayName)."
         }
     }
 }

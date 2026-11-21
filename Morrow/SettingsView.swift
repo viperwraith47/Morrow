@@ -60,7 +60,7 @@ struct SettingsView: View {
             Group {
                 switch activeTab {
                 case .photoSource:
-                    PhotoSourceSettingsPane()
+                    PhotoSourceSettingsPane(store: store)
                 case .credits:
                     CreditsSettingsPane()
                 }
@@ -111,36 +111,126 @@ struct SettingsView: View {
 }
 
 private struct PhotoSourceSettingsPane: View {
+    @ObservedObject var store: WallpaperStore
+    @ObservedObject private var keyStore = PixabayAPIKeyStore.shared
+    @State private var apiKeyInput = ""
+    @State private var keyError: String?
+
     var body: some View {
         Form {
             Section("Photo source") {
-                Label("Wikimedia Commons", systemImage: "globe")
-                    .font(.headline)
-                Text("Morrow searches Commons for bitmap files matching wallpaper or background terms, tagged CC0, and checks each result’s license metadata before displaying it. License and creator details are available with every wallpaper.")
+                Picker("Discovery source", selection: Binding(
+                    get: { store.discoveryProvider },
+                    set: { provider in
+                        Task { await store.selectDiscoveryProvider(provider) }
+                    }
+                )) {
+                    ForEach(WallpaperProvider.discoveryOptions) { provider in
+                        Text(provider.displayName).tag(provider)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .disabled(store.isLoading)
+
+                Text("Choose where Morrow searches for wallpapers. Wallhaven provides public SFW results from the General category only, excluding Anime and People. Pixabay requires your own API key.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+
+                if keyStore.hasKeychainKey {
+                    Label(
+                        store.discoveryProvider == .pixabay
+                            ? "Pixabay API key is stored in Keychain"
+                            : "Pixabay API key is stored in Keychain but is not used by Wallhaven",
+                        systemImage: "checkmark.shield"
+                    )
+                    .font(.callout)
+                } else if keyStore.isUsingDebugKey {
+                    Label(
+                        store.discoveryProvider == .pixabay
+                            ? "A local Debug-only Pixabay key is active"
+                            : "A local Debug-only Pixabay key is available but not used by Wallhaven",
+                        systemImage: "hammer"
+                    )
+                    .font(.callout)
+                } else if store.discoveryProvider == .pixabay {
+                    Label("Pixabay is selected, but it needs an API key", systemImage: "key.horizontal")
+                        .font(.callout)
+                    Text("Add a key below. Morrow will remain on Pixabay and will not switch sources until you choose another provider.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Wallhaven is selected and searches SFW wallpapers in the General category only. Pixabay needs a key before it can return results.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+
+                SecureField("Pixabay API key", text: $apiKeyInput)
+                    .textFieldStyle(.roundedBorder)
+                HStack {
+                    Button("Save API Key", action: saveAPIKey)
+                        .disabled(apiKeyInput.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                    if keyStore.hasKeychainKey {
+                        Button("Remove Key", role: .destructive, action: removeAPIKey)
+                    }
+                }
+
+                Link("Get a Pixabay API key", destination: URL(string: "https://pixabay.com/api/docs/")!)
+                Link("Pixabay Content License", destination: URL(string: "https://pixabay.com/service/license-summary/")!)
+                Link("Visit Wallhaven", destination: URL(string: "https://wallhaven.cc")!)
                 Link("Visit Wikimedia Commons", destination: URL(string: "https://commons.wikimedia.org")!)
-                Link("About the CC0 1.0 license", destination: URL(string: "https://creativecommons.org/publicdomain/zero/1.0/")!)
             }
 
             Section("Privacy") {
-                Label("Searches and image requests go directly from this Mac to Wikimedia. The service receives standard connection information, such as your IP address and request headers.", systemImage: "lock.shield")
+                Label("Search requests go directly from this Mac to the selected provider. Wallhaven receives SFW search terms and a General-category-only filter, excluding Anime and People. Pixabay receives the API key and search terms only when Pixabay is selected.", systemImage: "lock.shield")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Morrow does not use accounts, analytics, or advertising. Favorites and collections are stored on this Mac. Wallpapers you choose to keep offline, download, or apply are saved locally and are not synced.")
+                Text("Morrow stores a key entered here in macOS Keychain. It has no Morrow account service, analytics, advertising, or cloud sync. Favorites and collections stay on this Mac; wallpapers you choose to keep offline, download, or apply are saved locally.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
-                Text("Older Morrow versions may have stored an Unsplash key or favorites. This version does not read or delete the old keychain item, and keeps the new Commons favorites in separate local storage.")
+                Text("Pixabay search responses are cached for 24 hours. Pixabay image URLs are temporary display URLs; use Keep Offline or Download to save an image locally. Pixabay's API guidance recommends server-side downloads. Morrow makes direct client requests and does not claim Pixabay has approved this architecture.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                Text("A developer can optionally configure a local Debug-only test key. That setting is ignored in Release builds; see the source repository instructions. Existing Commons favorites, offline files, and collections are kept as-is; opening a Commons item may still load its image from Wikimedia.")
+                    .font(.callout)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                Link("Pixabay privacy policy", destination: URL(string: "https://pixabay.com/service/privacy/")!)
+                Link("Wallhaven privacy policy", destination: URL(string: "https://wallhaven.cc/privacy-policy")!)
                 Link("Wikimedia Foundation privacy policy", destination: URL(string: "https://foundation.wikimedia.org/wiki/Policy:Privacy_policy")!)
             }
         }
         .formStyle(.grouped)
         .scrollContentBackground(.hidden)
         .contentMargins(.top, 8, for: .scrollContent)
+        .alert("Pixabay API Key", isPresented: Binding(
+            get: { keyError != nil },
+            set: { if !$0 { keyError = nil } }
+        )) {
+            Button("OK", role: .cancel) { keyError = nil }
+        } message: {
+            Text(keyError ?? "")
+        }
+    }
+
+    private func saveAPIKey() {
+        do {
+            try keyStore.saveAPIKey(apiKeyInput)
+            apiKeyInput = ""
+            Task { await store.photoSourceDidChange() }
+        } catch {
+            keyError = error.localizedDescription
+        }
+    }
+
+    private func removeAPIKey() {
+        do {
+            try keyStore.removeAPIKey()
+            Task { await store.photoSourceDidChange() }
+        } catch {
+            keyError = error.localizedDescription
+        }
     }
 }
 
@@ -174,9 +264,11 @@ private struct CreditsSettingsPane: View {
             }
 
             Section("Photo source") {
-                Text("Morrow uses Wikimedia Commons and displays CC0 license, source, and creator information with each image when available. Morrow is an independent app and is not endorsed by the Wikimedia Foundation.")
+                Text("Choose Wallhaven or Pixabay for discovery in Photo Source Settings. Wallhaven provides public SFW results in the General category only, excluding Anime and People; Pixabay requires an API key. Existing Wikimedia Commons wallpapers remain in your library. Morrow is independent and is not endorsed by these providers.")
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                Link("Visit Wallhaven", destination: URL(string: "https://wallhaven.cc")!)
+                Link("Visit Pixabay", destination: URL(string: "https://pixabay.com")!)
                 Link("Visit Wikimedia Commons", destination: URL(string: "https://commons.wikimedia.org")!)
             }
         }

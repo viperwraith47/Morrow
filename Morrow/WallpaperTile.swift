@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 struct WallpaperTile: View {
-    let photo: WikimediaPhoto
+    let photo: WallpaperPhoto
     @ObservedObject var store: WallpaperStore
     let onSelect: () -> Void
 
@@ -10,11 +10,15 @@ struct WallpaperTile: View {
         VStack(alignment: .leading, spacing: 9) {
             ZStack(alignment: .topTrailing) {
                 Button(action: onSelect) {
-                    wallpaperImage
-                        .aspectRatio(photo.aspectRatio, contentMode: .fit)
-                        .frame(maxWidth: .infinity)
-                        .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-                        .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    GeometryReader { geometry in
+                        wallpaperImage
+                            .frame(width: geometry.size.width, height: geometry.size.height)
+                            .clipped()
+                    }
+                    .aspectRatio(photo.aspectRatio, contentMode: .fit)
+                    .frame(maxWidth: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                    .contentShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel("Preview \(photo.title)")
@@ -54,6 +58,11 @@ struct WallpaperTile: View {
                     HStack(spacing: 5) {
                         Text("by \(photo.creditName)")
                             .lineLimit(1)
+                        if let sourceURL = photo.sourceURL {
+                            Link(photo.provider.shortName, destination: sourceURL)
+                        } else {
+                            Text(photo.provider.shortName)
+                        }
                         if store.isOffline(photo) {
                             Image(systemName: "arrow.down.circle.fill")
                                 .help("Available offline")
@@ -100,14 +109,14 @@ struct WallpaperTile: View {
             }
 
             if let url = photo.sourceURL {
-                Link("View on Wikimedia Commons", destination: url)
+                Link("View on \(photo.provider.displayName)", destination: url)
             }
         }
     }
 
     @ViewBuilder
     private var wallpaperImage: some View {
-        WikimediaImageView(url: photo.thumbnailURL, localImageURL: store.offlineURL(for: photo)) { image, isLoading in
+        WallpaperImageView(url: photo.thumbnailURL, localImageURL: store.offlineURL(for: photo)) { image, isLoading in
             if let image {
                 Image(nsImage: image).resizable().scaledToFill()
             } else {
@@ -127,7 +136,7 @@ struct WallpaperTile: View {
     }
 }
 
-struct WikimediaImageView<Content: View>: View {
+struct WallpaperImageView<Content: View>: View {
     let url: URL?
     let localImageURL: URL?
     let content: (NSImage?, Bool) -> Content
@@ -156,7 +165,7 @@ struct WikimediaImageView<Content: View>: View {
                     return
                 }
                 guard let url else { return }
-                image = await WikimediaCommonsService.shared.image(at: url)
+                image = await WallpaperImageService.image(at: url)
             }
     }
 }

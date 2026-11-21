@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct PhotoDetailView: View {
-    let photo: WikimediaPhoto
+    let photo: WallpaperPhoto
     @ObservedObject var store: WallpaperStore
     @Environment(\.dismiss) private var dismiss
     @State private var isPresentingNewCollection = false
@@ -35,13 +35,10 @@ struct PhotoDetailView: View {
                                 .fontDesign(.serif)
                                 .fixedSize(horizontal: false, vertical: true)
 
+                            Text("Creator: \(photo.creditName)")
+                                .font(.callout)
                             if let sourceURL = photo.sourceURL {
-                                Link("Creator: \(photo.creditName)", destination: sourceURL)
-                                    .font(.callout)
-                                Link("View source on Wikimedia Commons", destination: sourceURL)
-                                    .font(.callout)
-                            } else {
-                                Text("Creator: \(photo.creditName)")
+                                Link("View on \(photo.provider.displayName)", destination: sourceURL)
                                     .font(.callout)
                             }
 
@@ -95,6 +92,8 @@ struct PhotoDetailView: View {
                         .disabled(store.isDownloading || store.isApplyingWallpaper)
                     }
                     .padding(.bottom, 3)
+
+                    photoMetadata
 
                     HStack(spacing: 12) {
                         Button {
@@ -155,12 +154,12 @@ struct PhotoDetailView: View {
 
             Divider()
             HStack {
-                Text("CC0 files are freely reusable; creator and source details are shown as a courtesy.")
+                Text(photo.provider.licenseNotice)
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 Spacer()
                 if let sourceURL = photo.sourceURL {
-                    Link("Open file page", destination: sourceURL)
+                    Link("Open source page", destination: sourceURL)
                         .font(.caption)
                 }
             }
@@ -185,9 +184,58 @@ struct PhotoDetailView: View {
         }
     }
 
+    private var photoMetadata: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            HStack(spacing: 8) {
+                Text(photo.qualityLabel)
+                    .font(.caption.weight(.semibold))
+                    .foregroundStyle(.primary)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
+                    .background(.quaternary, in: Capsule())
+
+                if let dimensions = photo.availableDimensionsText {
+                    Text("Available: \(dimensions)")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("Available dimensions unavailable")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+            }
+
+            if let originalDimensions = photo.originalDimensionsText {
+                Text("Source dimensions: \(originalDimensions)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if let sourceFileSize = photo.sourceFileSizeText {
+                Text("Original file size: \(sourceFileSize)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
+            if let uploadTimestamp = photo.uploadTimestamp {
+                Text("Uploaded: \(uploadTimestamp.formatted(date: .abbreviated, time: .omitted))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if photo.provider == .pixabay {
+                Text("Upload date: Not provided by Pixabay")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else {
+                Text("Upload date unavailable")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
+    }
+
     @ViewBuilder
     private var previewImage: some View {
-        WikimediaImageView(url: photo.thumbnailURL, localImageURL: store.offlineURL(for: photo)) { image, isLoading in
+        WallpaperImageView(url: photo.thumbnailURL, localImageURL: store.offlineURL(for: photo)) { image, isLoading in
             if let image {
                 Image(nsImage: image).resizable().scaledToFit()
             } else if isLoading {

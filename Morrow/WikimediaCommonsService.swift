@@ -1,4 +1,3 @@
-import AppKit
 import Foundation
 
 struct WikimediaCommonsService {
@@ -21,14 +20,7 @@ struct WikimediaCommonsService {
         return URLSession(configuration: configuration)
     }()
 
-    private static let imageCache: NSCache<NSURL, NSImage> = {
-        let cache = NSCache<NSURL, NSImage>()
-        cache.countLimit = 80
-        cache.totalCostLimit = 150 * 1024 * 1024
-        return cache
-    }()
-
-    func photos(query: String, page: Int) async throws -> WikimediaPhotoPage {
+    func photos(query: String, page: Int) async throws -> WallpaperPhotoPage {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         let searchTerms = [trimmedQuery, "filetype:bitmap", "incategory:\"CC-Zero\"", "(wallpaper OR background)"]
             .filter { !$0.isEmpty }
@@ -43,7 +35,7 @@ struct WikimediaCommonsService {
             URLQueryItem(name: "gsrlimit", value: String(Self.pageSize)),
             URLQueryItem(name: "gsroffset", value: String(max(0, page - 1) * Self.pageSize)),
             URLQueryItem(name: "prop", value: "imageinfo"),
-            URLQueryItem(name: "iiprop", value: "url|size|extmetadata"),
+            URLQueryItem(name: "iiprop", value: "timestamp|url|size|extmetadata"),
             URLQueryItem(name: "iiurlwidth", value: "1200"),
             URLQueryItem(name: "iiextmetadatalanguage", value: "en"),
             URLQueryItem(name: "iiextmetadatafilter", value: "ImageDescription|Artist|LicenseShortName|LicenseUrl|Source")
@@ -59,41 +51,7 @@ struct WikimediaCommonsService {
         let response: CommonsAPIResponse = try await request(url: url)
         let photos = (response.query.pages ?? []).compactMap(makePhoto)
         let hasMore = response.continuation?.searchOffset != nil || (response.query.pages?.count ?? 0) == Self.pageSize
-        return WikimediaPhotoPage(photos: photos, totalPages: hasMore ? page + 1 : page)
-    }
-
-    func imageData(for photo: WikimediaPhoto) async throws -> Data {
-        guard let url = photo.originalURL else {
-            throw WikimediaCommonsServiceError.imageUnavailable
-        }
-        var request = URLRequest(url: url)
-        request.setValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
-        request.cachePolicy = .returnCacheDataElseLoad
-        let (data, response) = try await Self.session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode) else {
-            throw WikimediaCommonsServiceError.imageUnavailable
-        }
-        return data
-    }
-
-    func image(at url: URL) async -> NSImage? {
-        let cacheKey = url as NSURL
-        if let cached = Self.imageCache.object(forKey: cacheKey) {
-            return cached
-        }
-
-        var request = URLRequest(url: url)
-        request.setValue(Self.userAgent, forHTTPHeaderField: "User-Agent")
-        request.cachePolicy = .returnCacheDataElseLoad
-        guard let (data, response) = try? await Self.session.data(for: request),
-              let httpResponse = response as? HTTPURLResponse,
-              (200..<300).contains(httpResponse.statusCode),
-              let image = NSImage(data: data) else {
-            return nil
-        }
-        Self.imageCache.setObject(image, forKey: cacheKey, cost: data.count)
-        return image
+        return WallpaperPhotoPage(photos: photos, totalPages: hasMore ? page + 1 : page)
     }
 
     private func request<Response: Decodable>(url: URL) async throws -> Response {
@@ -119,7 +77,7 @@ struct WikimediaCommonsService {
         }
     }
 
-    private func makePhoto(from page: CommonsPage) -> WikimediaPhoto? {
+    private func makePhoto(from page: CommonsPage) -> WallpaperPhoto? {
         guard let image = page.imageInfo?.first,
               let originalAddress = image.url,
               let originalURL = secureURL(originalAddress),
@@ -140,7 +98,7 @@ struct WikimediaCommonsService {
         let creator = plainText(image.metadata?.artist?.value)
         let sourceCredit = plainText(image.metadata?.source?.value)
 
-        return WikimediaPhoto(
+        return WallpaperPhoto(
             id: String(page.pageID),
             title: title,
             width: image.width ?? 0,
@@ -151,7 +109,12 @@ struct WikimediaCommonsService {
             creator: creator?.isEmpty == false ? creator : nil,
             sourceCredit: sourceCredit?.isEmpty == false ? sourceCredit : nil,
             licenseName: licenseName,
-            licenseAddress: licenseURL.absoluteString
+            licenseAddress: licenseURL.absoluteString,
+            provider: .wikimediaCommons,
+            sourceWidth: image.width,
+            sourceHeight: image.height,
+            sourceFileSizeBytes: image.size,
+            uploadTimestamp: image.timestamp.flatMap { ISO8601DateFormatter().date(from: $0) }
         )
     }
 
@@ -215,19 +178,23 @@ private struct CommonsPage: Decodable {
 }
 
 private struct CommonsImageInfo: Decodable {
+    let timestamp: String?
     let url: String?
     let thumbURL: String?
     let descriptionURL: String?
     let width: Int?
     let height: Int?
+    let size: Int64?
     let metadata: CommonsMetadata?
 
     enum CodingKeys: String, CodingKey {
+        case timestamp
         case url
         case thumbURL = "thumburl"
         case descriptionURL = "descriptionurl"
         case width
         case height
+        case size
         case metadata = "extmetadata"
     }
 }

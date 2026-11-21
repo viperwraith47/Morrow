@@ -8,9 +8,9 @@ final class WallpaperStore: ObservableObject {
     @Published var selection: SidebarDestination? = .forYou
     @Published var searchText = ""
     @Published var orientation: WallpaperOrientation = .all
-    @Published private(set) var photos: [WikimediaPhoto] = []
-    @Published private(set) var favorites: [WikimediaPhoto] = []
-    @Published private(set) var offlinePhotos: [WikimediaPhoto] = []
+    @Published private(set) var photos: [WallpaperPhoto] = []
+    @Published private(set) var favorites: [WallpaperPhoto] = []
+    @Published private(set) var offlinePhotos: [WallpaperPhoto] = []
     @Published private(set) var collections: [WallpaperCollection] = []
     @Published private(set) var offlineDownloadsInProgress: Set<String> = []
     @Published private(set) var isLoading = false
@@ -18,8 +18,12 @@ final class WallpaperStore: ObservableObject {
     @Published private(set) var isApplyingWallpaper = false
     @Published private(set) var canLoadMore = false
     @Published var alertMessage: String?
+    @Published private(set) var discoveryProvider: WallpaperProvider
 
-    private let service = WikimediaCommonsService.shared
+    private let wallhavenService = WallhavenService.shared
+    private let pixabayService = PixabayService.shared
+    private let apiKeyStore = PixabayAPIKeyStore.shared
+    private let discoveryProviderKey = "wallpaperDiscoveryProvider"
     private let favoritesKey = "savedWikimediaWallpapers"
     private let offlinePhotosKey = "offlineWikimediaWallpapers"
     private let collectionsKey = "wallpaperCollections"
@@ -28,8 +32,19 @@ final class WallpaperStore: ObservableObject {
     private var totalPages = 1
 
     init() {
+        let defaults = UserDefaults.standard
+        if let rawValue = defaults.string(forKey: discoveryProviderKey),
+           let savedProvider = WallpaperProvider(rawValue: rawValue),
+           WallpaperProvider.discoveryOptions.contains(savedProvider) {
+            discoveryProvider = savedProvider
+        } else {
+            let initialProvider: WallpaperProvider = apiKeyStore.apiKey == nil ? .wallhaven : .pixabay
+            discoveryProvider = initialProvider
+            defaults.set(initialProvider.rawValue, forKey: discoveryProviderKey)
+        }
+
         if let data = UserDefaults.standard.data(forKey: favoritesKey),
-           let saved = try? JSONDecoder().decode([WikimediaPhoto].self, from: data) {
+           let saved = try? JSONDecoder().decode([WallpaperPhoto].self, from: data) {
             favorites = saved
         }
 
@@ -56,8 +71,12 @@ final class WallpaperStore: ObservableObject {
         }
     }
 
-    var displayedPhotos: [WikimediaPhoto] {
-        let source: [WikimediaPhoto]
+    var requiresPixabayAPIKey: Bool {
+        discoveryProvider == .pixabay && apiKeyStore.apiKey == nil
+    }
+
+    var displayedPhotos: [WallpaperPhoto] {
+        let source: [WallpaperPhoto]
         switch selection {
         case .saved:
             source = favorites
@@ -139,16 +158,34 @@ final class WallpaperStore: ObservableObject {
         await fetch(page: 1, appending: false)
     }
 
+    func photoSourceDidChange() async {
+        guard !isLocalLibrarySelection else { return }
+        await fetch(page: 1, appending: false)
+    }
+
+    func selectDiscoveryProvider(_ provider: WallpaperProvider) async {
+        guard WallpaperProvider.discoveryOptions.contains(provider),
+              provider != discoveryProvider,
+              !isLoading else {
+            return
+        }
+        discoveryProvider = provider
+        UserDefaults.standard.set(provider.rawValue, forKey: discoveryProviderKey)
+        alertMessage = nil
+        guard !isLocalLibrarySelection else { return }
+        await fetch(page: 1, appending: false)
+    }
+
     func loadMore() async {
         guard canLoadMore, !isLoading, !isLocalLibrarySelection else { return }
         await fetch(page: currentPage + 1, appending: true)
     }
 
-    func isSaved(_ photo: WikimediaPhoto) -> Bool {
+    func isSaved(_ photo: WallpaperPhoto) -> Bool {
         favorites.contains(where: { $0.id == photo.id })
     }
 
-    func toggleSaved(_ photo: WikimediaPhoto) {
+    func toggleSaved(_ photo: WallpaperPhoto) {
         if isSaved(photo) {
             favorites.removeAll { $0.id == photo.id }
             for index in collections.indices {
@@ -202,11 +239,11 @@ final class WallpaperStore: ObservableObject {
         }
     }
 
-    func isInCollection(_ photo: WikimediaPhoto, collectionID: UUID) -> Bool {
+    func isInCollection(_ photo: WallpaperPhoto, collectionID: UUID) -> Bool {
         collections.first(where: { $0.id == collectionID })?.photoIDs.contains(photo.id) ?? false
     }
 
-    func toggleCollectionMembership(_ photo: WikimediaPhoto, collectionID: UUID) {
+    func toggleCollectionMembership(_ photo: WallpaperPhoto, collectionID: UUID) {
         guard isSaved(photo), let index = collections.firstIndex(where: { $0.id == collectionID }) else { return }
         if collections[index].photoIDs.contains(photo.id) {
             collections[index].photoIDs.removeAll { $0 == photo.id }
@@ -216,7 +253,7 @@ final class WallpaperStore: ObservableObject {
         persistCollections()
     }
 
-    func offlineURL(for photo: WikimediaPhoto) -> URL? {
+    func offlineURL(for photo: WallpaperPhoto) -> URL? {
         guard offlinePhotos.contains(where: { $0.id == photo.id }),
               let url = offlineAssetURL(for: photo),
               FileManager.default.fileExists(atPath: url.path) else {
@@ -225,15 +262,15 @@ final class WallpaperStore: ObservableObject {
         return url
     }
 
-    func isOffline(_ photo: WikimediaPhoto) -> Bool {
+    func isOffline(_ photo: WallpaperPhoto) -> Bool {
         offlineURL(for: photo) != nil
     }
 
-    func isKeepingOffline(_ photo: WikimediaPhoto) -> Bool {
+    func isKeepingOffline(_ photo: WallpaperPhoto) -> Bool {
         offlineDownloadsInProgress.contains(photo.id)
     }
 
-    func toggleOffline(_ photo: WikimediaPhoto) async {
+    func toggleOffline(_ photo: WallpaperPhoto) async {
         if isOffline(photo) {
             removeOffline(photo)
         } else {
@@ -241,7 +278,7 @@ final class WallpaperStore: ObservableObject {
         }
     }
 
-    func keepOffline(_ photo: WikimediaPhoto) async {
+    func keepOffline(_ photo: WallpaperPhoto) async {
         guard !isOffline(photo), !offlineDownloadsInProgress.contains(photo.id) else { return }
         guard let destination = offlineAssetURL(for: photo) else {
             alertMessage = "Could not locate Morrow’s Application Support folder."
@@ -256,7 +293,7 @@ final class WallpaperStore: ObservableObject {
                 at: destination.deletingLastPathComponent(),
                 withIntermediateDirectories: true
             )
-            let data = try await service.imageData(for: photo)
+            let data = try await WallpaperImageService.imageData(for: photo)
             guard NSImage(data: data) != nil else {
                 alertMessage = "The downloaded file is not a readable image and was not kept offline."
                 return
@@ -270,7 +307,7 @@ final class WallpaperStore: ObservableObject {
         }
     }
 
-    func removeOffline(_ photo: WikimediaPhoto) {
+    func removeOffline(_ photo: WallpaperPhoto) {
         if let url = offlineAssetURL(for: photo), FileManager.default.fileExists(atPath: url.path) {
             do {
                 try FileManager.default.removeItem(at: url)
@@ -287,7 +324,7 @@ final class WallpaperStore: ObservableObject {
         alertMessage = nil
     }
 
-    func applyAsWallpaper(_ photo: WikimediaPhoto) async {
+    func applyAsWallpaper(_ photo: WallpaperPhoto) async {
         guard !isApplyingWallpaper, !isDownloading else { return }
 
         let screens = NSScreen.screens
@@ -322,7 +359,7 @@ final class WallpaperStore: ObservableObject {
         }
     }
 
-    func download(_ photo: WikimediaPhoto) async {
+    func download(_ photo: WallpaperPhoto) async {
         guard !isDownloading, !isApplyingWallpaper else { return }
 
         let panel = NSSavePanel()
@@ -346,16 +383,16 @@ final class WallpaperStore: ObservableObject {
         }
     }
 
-    private func imageData(for photo: WikimediaPhoto) async throws -> Data {
+    private func imageData(for photo: WallpaperPhoto) async throws -> Data {
         if let url = offlineURL(for: photo),
            let data = try? Data(contentsOf: url),
            NSImage(data: data) != nil {
             return data
         }
-        return try await service.imageData(for: photo)
+        return try await WallpaperImageService.imageData(for: photo)
     }
 
-    private func offlineAssetURL(for photo: WikimediaPhoto) -> URL? {
+    private func offlineAssetURL(for photo: WallpaperPhoto) -> URL? {
         let safeIdentifier = photo.id.replacingOccurrences(
             of: "[^A-Za-z0-9_-]",
             with: "",
@@ -373,7 +410,7 @@ final class WallpaperStore: ObservableObject {
 
     private func loadOfflineCatalog() {
         guard let data = UserDefaults.standard.data(forKey: offlinePhotosKey),
-              let saved = try? JSONDecoder().decode([WikimediaPhoto].self, from: data) else {
+              let saved = try? JSONDecoder().decode([WallpaperPhoto].self, from: data) else {
             return
         }
         offlinePhotos = saved.filter { photo in
@@ -411,12 +448,46 @@ final class WallpaperStore: ObservableObject {
             currentPage = 0
         }
 
+        if requiresPixabayAPIKey {
+            photos = []
+            canLoadMore = false
+            currentPage = 0
+            totalPages = 1
+            return
+        }
+
+        guard discoveryProvider != .wikimediaCommons else {
+            alertMessage = "Wikimedia Commons is available for saved wallpapers only. Choose Wallhaven or Pixabay in Photo Source Settings."
+            return
+        }
+
         var requestedPage = page
         var emptyPageCount = 0
         do {
             while true {
                 let previousPhotoCount = photos.count
-                let result = try await service.photos(query: activeQuery, page: requestedPage)
+                let result: WallpaperPhotoPage
+                switch discoveryProvider {
+                case .wallhaven:
+                    result = try await wallhavenService.photos(query: activeQuery, page: requestedPage)
+                case .pixabay:
+                    guard let apiKey = apiKeyStore.apiKey else {
+                        photos = []
+                        canLoadMore = false
+                        currentPage = 0
+                        totalPages = 1
+                        return
+                    }
+                    result = try await pixabayService.photos(
+                        query: activeQuery,
+                        page: requestedPage,
+                        orientation: orientation,
+                        apiKey: apiKey
+                    )
+                case .wikimediaCommons:
+                    alertMessage = "Wikimedia Commons is available for saved wallpapers only. Choose Wallhaven or Pixabay in Photo Source Settings."
+                    return
+                }
                 let matchingPhotos = result.photos.filter { photo in
                     switch orientation {
                     case .all: true
