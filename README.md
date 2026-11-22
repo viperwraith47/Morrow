@@ -16,7 +16,7 @@
 Morrow is built with **Swift** and **SwiftUI**. Select Wallhaven or Pixabay in Settings; Wallhaven needs no key, while Pixabay requires a personal API key stored in macOS Keychain. If Pixabay is selected without a key, Morrow asks you to add one and stays on Pixabay rather than switching providers. Your library stays on your Mac. Discovery and wallpaper changes are manual—Morrow does not rotate wallpapers on a schedule.
 
 <p align="center">
-  <a href="https://github.com/viperwraith47/Morrow/releases/latest/download/Morrow.dmg">⬇️ Download latest Morrow.dmg</a>
+  <a href="https://github.com/viperwraith47/Morrow/releases/download/v1.2/Morrow.v1.2.dmg">⬇️ Download latest Morrow.dmg</a>
   · <a href="https://github.com/viperwraith47/Morrow/releases">View all releases</a>
 </p>
 
