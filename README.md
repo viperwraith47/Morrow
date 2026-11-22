@@ -11,9 +11,9 @@
   <img src="https://img.shields.io/badge/Images-Wallhaven%20%7C%20Pixabay-green" alt="Wallhaven and Pixabay sources" />
 </p>
 
-**Morrow** is a native macOS app for finding, organizing, and setting desktop wallpapers. Choose Wallhaven for public SFW results in its General category only (excluding Anime and People), or choose Pixabay and search with your own API key. Preview source and available rights information, save favorites, group them into collections, keep images offline, and apply a wallpaper to all connected displays.
+**Morrow** is a native macOS app for finding, organizing, and setting desktop wallpapers. Choose Wallhaven for public SFW results in its General category only (excluding Anime and People), or choose Pixabay and search with your own API key. Preview the quality and dimensions of the image Morrow can apply, compare source details when available, organize favorites into collections, keep images offline, and set a wallpaper across connected displays.
 
-Morrow is built with **Swift** and **SwiftUI**. Select Wallhaven or Pixabay in Settings; Wallhaven needs no key, while Pixabay requires a personal API key stored in macOS Keychain. If Pixabay is selected without a key, Morrow asks you to add one and does not switch providers. Your library stays on your Mac. Discovery and wallpaper changes are manual—Morrow does not rotate wallpapers on a schedule.
+Morrow is built with **Swift** and **SwiftUI**. Select Wallhaven or Pixabay in Settings; Wallhaven needs no key, while Pixabay requires a personal API key stored in macOS Keychain. If Pixabay is selected without a key, Morrow asks you to add one and stays on Pixabay rather than switching providers. Your library stays on your Mac. Discovery and wallpaper changes are manual—Morrow does not rotate wallpapers on a schedule.
 
 <p align="center">
   <a href="https://github.com/viperwraith47/Morrow/releases/latest/download/Morrow.dmg">⬇️ Download latest Morrow.dmg</a>
@@ -27,8 +27,9 @@ Morrow is built with **Swift** and **SwiftUI**. Select Wallhaven or Pixabay in S
 ## ✨ Features
 
 - **🔎 Discover and search:** Browse For You or explore Nature, Architecture, Minimal, Ocean, and Abstract. Search with your own terms and scroll to load more results.
+- **🌐 Choose a source:** Select Wallhaven for no-key, public SFW search in the General category (excluding Anime and People), or Pixabay with your own API key. A missing Pixabay key never triggers a provider switch; saved Wikimedia Commons items remain supported.
 - **↕️ Orientation filters:** Narrow results to all images, portrait, or landscape.
-- **🖼️ Large previews:** Open a wallpaper to inspect available quality, dimensions, file size, upload date, provider, source, and rights information, with a link to its Wallhaven, Pixabay, or saved Commons page.
+- **🖼️ Read image quality and source details:** Previews show a 4K, Full HD, HD, or Standard label and dimensions for the best known rendition Morrow can apply. When available, compare original dimensions and file size separately. Upload dates appear when the provider supplies them; Pixabay does not provide upload dates. Source, creator, and rights details link back to the provider page.
 - **❤️ Favorites:** Save and remove wallpapers from the grid or preview; saved wallpapers are available in your local library.
 - **📚 Collections:** Create, rename, and delete named collections to organize favorites. A favorite can appear in multiple collections.
 - **📥 Offline library:** Keep the highest-resolution image available from the selected provider on your Mac, then browse, preview, or apply it without an internet connection.
